@@ -1,2 +1,2 @@
-# MasterThesis
-My Master Thesis. WIP.
+# 🎓 Master Thesis
+> My Master Thesis. WIP.
