@@ -2,3 +2,4 @@ black
 isort
 rich
 vaderSentiment
+scipy
