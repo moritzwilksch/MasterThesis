@@ -3,3 +3,4 @@ isort
 rich
 vaderSentiment
 scipy
+pyaml
