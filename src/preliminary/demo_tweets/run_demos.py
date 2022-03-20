@@ -2,13 +2,11 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 
-from src.preliminary.demo_tweets.models import (
-    FinBERT,
-    ModelWrapper,
-    TwitterRoberta,
-    Vader,
-)
+from src.preliminary.demo_tweets.models import (FinBERT, ModelWrapper,
+                                                TwitterRoberta, Vader)
+from src.utils.db_logging import logger
 
+logger.info("Starting demo run")
 c = Console(record=True)
 c.clear()
 
@@ -40,3 +38,5 @@ experiment.run()
 
 with open("outputs/examples/examples.txt", "w") as f:
     f.writelines(c.export_text())
+
+logger.info("Ended demo run")
