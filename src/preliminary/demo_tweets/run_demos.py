@@ -2,8 +2,12 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 
-from src.preliminary.demo_tweets.models import (FinBERT, ModelWrapper,
-                                                TwitterRoberta, Vader)
+from src.preliminary.demo_tweets.models import (
+    FinBERT,
+    ModelWrapper,
+    TwitterRoberta,
+    Vader,
+)
 from src.utils.db_logging import logger
 
 logger.info("Starting demo run")
@@ -15,7 +19,7 @@ class Experiment:
     def __init__(self, models: list[ModelWrapper], examples_filename: str):
         self.models = models
 
-        with open("data/examples/examples.yaml") as f:
+        with open(examples_filename) as f:
             self.examples = yaml.safe_load(f)
 
     def run(self) -> None:

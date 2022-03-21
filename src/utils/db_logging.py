@@ -18,12 +18,12 @@ class MongoLogger:
         level: int = logging.INFO,
     ):
         if user is None:
-            user = os.getenv("MONGO_INITDB_ROOT_USERNAME")
+            user = os.getenv("MONGO_USER")
         if passwd is None:
-            passwd = os.getenv("MONGO_INITDB_ROOT_PASSWORD")
+            passwd = os.getenv("MONGO_PASSWD")
 
         client = MongoClient(
-            f"mongodb://{user}:{passwd}@{host}:{port}", authSource="admin"
+            f"mongodb://{user}:{passwd}@{host}:{port}/logging", authSource="logging"
         )
         _db = client[db]
         self.coll: Collection = _db[coll]
@@ -69,7 +69,7 @@ class MongoLogger:
 
 
 logger = MongoLogger(
-    host="65.108.135.187",
+    host=os.getenv("MONGO_IP"),
     port=27017,
     db="logging",
     coll="thesis",
