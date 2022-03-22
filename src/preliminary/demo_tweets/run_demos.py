@@ -22,7 +22,15 @@ class Experiment:
         with open(examples_filename) as f:
             self.examples = yaml.safe_load(f)
 
-    def run(self) -> None:
+    def run(self, manual_input: str = None) -> None:
+        if manual_input is not None:
+            c.print(manual_input, style="bold")
+            for model in self.models:
+                pred = model.predict(manual_input)
+                c.print(f"\t{f'{model.__class__.__name__}:':<25} {pred}")
+            c.print()
+            return None
+
         for category in self.examples:
             c.print(Panel(category.upper()), style="bold")
             texts = self.examples.get(category)
