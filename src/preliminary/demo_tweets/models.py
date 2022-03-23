@@ -3,8 +3,11 @@ import urllib.request
 from abc import ABC
 
 from scipy.special import softmax
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          TFAutoModelForSequenceClassification)
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TFAutoModelForSequenceClassification,
+)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
@@ -79,6 +82,28 @@ class FinBERT(ModelWrapper):
         output = self.model(tokens).logits.detach().numpy()[0]
         scores = softmax(output)
         sentiment = dict(zip(["pos", "neg", "neu"], scores))
+        return self.prettify(sentiment)
+
+
+# -----------------------------------------------------------------------------
+
+
+class FinancialBERT(ModelWrapper):
+    def __init__(self) -> None:
+        super().__init__()
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
+        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
+        )
+
+    def predict(self, text: str) -> str:
+
+        tokens = self.tokenizer(text, return_tensors="pt").get("input_ids")
+        output = self.model(tokens).logits.detach().numpy()[0]
+        scores = softmax(output)
+        sentiment = dict(zip(["neg", "neu", "pos"], scores))
         return self.prettify(sentiment)
 
 
