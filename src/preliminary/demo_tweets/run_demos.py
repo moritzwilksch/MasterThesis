@@ -4,13 +4,9 @@ import yaml
 from rich.console import Console
 from rich.panel import Panel
 
-from src.preliminary.demo_tweets.models import (
-    FinancialBERT,
-    FinBERT,
-    ModelWrapper,
-    TwitterRoberta,
-    Vader,
-)
+from src.preliminary.demo_tweets.models import (FinancialBERT, FinBERT,
+                                                ModelWrapper, TwitterRoberta,
+                                                Vader)
 from src.utils.db_logging import logger
 from src.utils.storage import bucket
 

@@ -3,11 +3,8 @@ import urllib.request
 from abc import ABC
 
 from scipy.special import softmax
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    TFAutoModelForSequenceClassification,
-)
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          TFAutoModelForSequenceClassification)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
