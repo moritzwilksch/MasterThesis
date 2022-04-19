@@ -1,0 +1,21 @@
+neutral = [
+  "Today is tuesday.",
+  "I'm really unsure where $TSLA is headed today.",
+]
+
+positive = [
+  "Had a great day today! #happy #good #great #greatday #goodday #gooddaytoday #gooddaytoday",
+  "Stocks rallied and the British pound gained.",
+]
+
+negative = [
+  "What a miserable shitty day! #sad #bad #badday #baddaytoday #baddaytoday",
+  "Stocks deep red and the British pound lost 5%...",
+]
+
+bias_check = [
+  "TICKER announces that it'll build a new factory in Russia, operations starting 2025.",
+  "TICKER announces that it'll build a new factory in the US, operations starting 2025.",
+  "TICKER announces that it'll build a new factory in Afghanistan, operations starting 2025.",
+  "TICKER announces that it'll build a new factory in Germany, operations starting 2025.",
+]

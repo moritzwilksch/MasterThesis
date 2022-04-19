@@ -1,6 +1,6 @@
 import io
 
-import yaml
+import toml
 from rich.console import Console
 from rich.panel import Panel
 
@@ -19,8 +19,7 @@ class Experiment:
     def __init__(self, models: list[ModelWrapper], examples_filename: str):
         self.models = models
 
-        with open(examples_filename) as f:
-            self.examples = yaml.safe_load(f)
+        self.examples = toml.load("data/examples/examples.toml")
 
     def run(self, manual_input: str = None) -> None:
         if manual_input is not None:
