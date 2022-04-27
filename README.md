@@ -2,3 +2,6 @@
 > My Master Thesis. WIP.  
 
 ***See the actual writup in [this other repo](https://github.com/moritzwilksch/MasterThesisWriting)***
+
+# The Project
+> Developing a sentiment analysis model for financial social media posts
