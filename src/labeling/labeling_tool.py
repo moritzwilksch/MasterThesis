@@ -1,6 +1,7 @@
 import os
 
 import polars as pl
+import toml
 from bson import ObjectId
 from pymongo import MongoClient
 from rich.align import Align
@@ -11,6 +12,8 @@ from rich.style import Style
 from rich.text import Text
 
 from src.utils.logging import log
+
+config = toml.load("config/data_labeling.toml")
 
 
 class MongoConnector:
@@ -173,9 +176,9 @@ if __name__ == "__main__":
         password,
         host="localhost",
         port=27017,
-        db="data_labeling",
-        collection="dev_coll",
-        authSource="data_labeling",
+        db=config["database"]["name"],
+        collection=config["database"]["collection"],
+        authSource=config["database"]["name"],
     )
 
     df = pl.DataFrame(
@@ -187,7 +190,6 @@ if __name__ == "__main__":
 
     # conn.collection.drop()
     conn.fill_db_from_frame(df)
-    print(conn.get_all_data_as_frame())
 
     labeler = DataLabeler(conn)
     labeler.run()
