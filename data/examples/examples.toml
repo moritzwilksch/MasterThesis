@@ -19,3 +19,8 @@ bias_check = [
   "TICKER announces that it'll build a new factory in Afghanistan, operations starting 2025.",
   "TICKER announces that it'll build a new factory in Germany, operations starting 2025.",
 ]
+
+typo_sensitivity = [
+  "This is good news.",
+  "This is gooooood news.",
+]
