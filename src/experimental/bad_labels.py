@@ -36,11 +36,19 @@ is_outlier = (dists > outlier_threshold).ravel()
 
 #%%
 import matplotlib.pyplot as plt
+import seaborn as sns
+# plt.rcParams["text.usetex"] = True
+plt.rcParams["font.family"] = "serif"
+plt.rcParams["font.serif"] = "Palatino"
+plt.rcParams["font.size"] = 16
 
-fig, ax = plt.subplots()
-ax.scatter(lower_dim_data[~is_outlier, 0], lower_dim_data[~is_outlier, 1], color="blue")
+
+fig, ax = plt.subplots(figsize=(10,5))
+ax.scatter(lower_dim_data[~is_outlier, 0], lower_dim_data[~is_outlier, 1], color="blue",alpha=0.2)
 ax.scatter(lower_dim_data[is_outlier, 0], lower_dim_data[is_outlier, 1], color="red")
-
+ax.set(xlabel="UMAP Component 1", ylabel="UMAP Component 2")
+sns.despine()
+plt.savefig("outputs/plots/plot.pdf", bbox_inches="tight")
 #%%
 for o in (
     df.filter(pl.col("sentiment") == 0)[is_outlier]
