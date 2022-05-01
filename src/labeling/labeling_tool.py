@@ -1,4 +1,5 @@
 import os
+import time
 
 import polars as pl
 import toml
@@ -75,7 +76,7 @@ class DataLabeler:
         self.conn = conn
         self.console = Console()
         self.inmem_df = self.conn.get_all_data_as_frame()
-        self.legend = "1...POS\t2...NEU\t3...NEG"
+        self.legend = "1...POS\t2...NEU\t3...NEG\t0...SPAM"
 
     def show_doc_by_id(self, doc_id: str, status: str):
         """
@@ -103,7 +104,7 @@ class DataLabeler:
         )
 
         self.console.print("\n" * 2)
-        choice = Prompt.ask("Choose", choices=["1", "2", "3"])
+        choice = Prompt.ask("Choose", choices=["1", "2", "3", "0"])
         return choice
 
     def sample_one_from_frame(self) -> str:
@@ -161,7 +162,8 @@ class DataLabeler:
 
             if labeled_docs % 3 == 0 and labeled_docs > 0:
                 log.warning("Please train active learning model now!")
-                exit(0)  # TODO: train AL model here and update entropy in Mongodb
+                time.sleep(2)
+                # exit(0)  # TODO: train AL model here and update entropy in Mongodb
 
             id_to_be_labeled = self.sample_one_from_frame()
             label = self.show_doc_by_id(id_to_be_labeled, status=status)

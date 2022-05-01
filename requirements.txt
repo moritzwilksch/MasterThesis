@@ -8,3 +8,6 @@ boto3
 wandb
 toml
 jsonpath-ng
+aiohttp
+requests
+polars

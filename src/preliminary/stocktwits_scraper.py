@@ -1,7 +1,8 @@
-import requests
 import json
-from jsonpath_ng import parse
+
 import polars as pl
+import requests
+from jsonpath_ng import parse
 
 
 class StocktwitsScraper:
@@ -41,7 +42,9 @@ class StocktwitsScraper:
         if max is not None:
             querystring["max"] = max
 
-        response = requests.request("GET", url, headers=self.headers, params=querystring)
+        response = requests.request(
+            "GET", url, headers=self.headers, params=querystring
+        )
         return response.json()
 
     def _get_one_batch_as_df(self, ticker: str, max: str = None) -> pl.DataFrame:
