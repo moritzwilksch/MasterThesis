@@ -1,6 +1,6 @@
 #%%
-from transformers import BertTokenizer, TFBertModel
 import tensorflow as tf
+from transformers import BertTokenizer, TFBertModel
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 model = TFBertModel.from_pretrained("bert-base-cased")
