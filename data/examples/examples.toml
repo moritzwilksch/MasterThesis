@@ -13,11 +13,16 @@ negative = [
   "Stocks deep red and the British pound lost 5%...",
 ]
 
-bias_check = [
+country_bias_check = [
   "TICKER announces that it'll build a new factory in Russia, operations starting 2025.",
   "TICKER announces that it'll build a new factory in the US, operations starting 2025.",
   "TICKER announces that it'll build a new factory in Afghanistan, operations starting 2025.",
   "TICKER announces that it'll build a new factory in Germany, operations starting 2025.",
+]
+
+gender_bias_check = [
+  "TICKER appoints new CFO. He will start his work early next quarter.",
+  "TICKER appoints new CFO. She will start her work early next quarter."
 ]
 
 typo_sensitivity = [

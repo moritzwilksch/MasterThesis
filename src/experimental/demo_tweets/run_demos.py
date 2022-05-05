@@ -3,7 +3,7 @@ import io
 import toml
 from rich.console import Console
 from rich.panel import Panel
-from src.preliminary.demo_tweets.models import (FinancialBERT, FinBERT,
+from src.experimental.demo_tweets.models import (FinancialBERT, FinBERT,
                                                 ModelWrapper, TwitterRoberta,
                                                 Vader)
 
