@@ -9,11 +9,12 @@ import seaborn as sns
 from rich.progress import track
 
 from src.utils.db import client
-from src.utils.logging import log
+from src.utils.log import log
 from src.utils.twitter_api import TwitterAPI
+from src.utils.plotting import set_style
 
 coll = client["thesis"]["tweet_counts"]
-
+set_style()
 
 def get_spy_ticker_list() -> list:
     """Fetches list of all S&P500 tickers from wikipedia. Saves to disk."""
@@ -66,19 +67,25 @@ plotdf = (
     .sort("avg_daily", reverse=True)
 )
 print(f"Matching {plotdf.height} tickers")
-fig, ax = plt.subplots(figsize=(12, 15))
+fig, ax = plt.subplots(figsize=(9, 11))
 sns.barplot(
     data=plotdf.to_pandas(),
     orient="h",
     x="avg_daily",
     y="ticker",
     ax=ax,
-    color="#00305e",
+    color="k",
     dodge=False,
 )
 
-ax.axvline(x=100, ls="--", alpha=0.5, color="k")
+ax.axvline(x=100, ls="--", color="white")
+
+ax.set_xlabel("Average number of tweets per day", weight="bold")
+ax.set_ylabel("Ticker", weight="bold")
+
 sns.despine()
+plt.savefig("outputs/plots/tweet_counts.png", dpi=300, bbox_inches="tight", facecolor="white")
+
 
 #%%
 query = " OR ".join(f"${t}" for t in plotdf["ticker"])
