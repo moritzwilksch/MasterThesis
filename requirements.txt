@@ -11,3 +11,4 @@ jsonpath-ng
 aiohttp
 requests
 polars
+python-dotenv
