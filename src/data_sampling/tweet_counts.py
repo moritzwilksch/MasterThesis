@@ -10,11 +10,12 @@ from rich.progress import track
 
 from src.utils.db import client
 from src.utils.log import log
-from src.utils.twitter_api import TwitterAPI
 from src.utils.plotting import set_style
+from src.utils.twitter_api import TwitterAPI
 
 coll = client["thesis"]["tweet_counts"]
 set_style()
+
 
 def get_spy_ticker_list() -> list:
     """Fetches list of all S&P500 tickers from wikipedia. Saves to disk."""
@@ -84,7 +85,9 @@ ax.set_xlabel("Average number of tweets per day", weight="bold")
 ax.set_ylabel("Ticker", weight="bold")
 
 sns.despine()
-plt.savefig("outputs/plots/tweet_counts.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(
+    "outputs/plots/tweet_counts.png", dpi=300, bbox_inches="tight", facecolor="white"
+)
 
 
 #%%
