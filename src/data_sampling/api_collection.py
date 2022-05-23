@@ -22,8 +22,10 @@ class TwitterAPICollector:
             response = self.api.search_request(
                 params=self.params, next_token=next_token
             )
+
             data_to_write = response.json().get("data")
             next_token = response.json().get("meta").get("next_token")
+            newest_id = response.json().get("meta").get("newest_id")
 
             # rate limited
             if response.status_code == 429:
@@ -46,15 +48,15 @@ class TwitterAPICollector:
             else:
                 # persist to DB
                 DB.thesis.prod_tweet.insert_many(data_to_write)
-                log.info(f"Saved {len(data_to_write)} tweets.")
+                log.info(f"Saved {len(data_to_write)} tweets. newest_id = {newest_id}")
 
             time.sleep(3.5)
 
 
 params = {
-    "start_time": "2021-04-01T00:00:00Z",
-    "end_time": "2021-05-01T00:00:00Z",
-    "max_results": 10,
+    "start_time": "2021-05-01T00:00:00Z",  # oldest time
+    "end_time": "2021-06-01T00:00:00Z",  # newest, most recent time
+    "max_results": 500,
 }
 
 collector = TwitterAPICollector(params=params)

@@ -1,6 +1,9 @@
 import os
 
 import boto3
+import dotenv
+
+dotenv.load_dotenv()
 
 bucket = boto3.resource(
     "s3",

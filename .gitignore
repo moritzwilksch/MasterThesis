@@ -1,5 +1,6 @@
 outputs/examples/examples.txt
 data/raw/*
+backup.gz
 
 
 
