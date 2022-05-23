@@ -94,4 +94,4 @@ plt.savefig(
 query = " OR ".join(f"${t}" for t in plotdf["ticker"])
 query = f"({query})"
 #%%
-TwitterAPI().get_tweet_count(query)
+# TwitterAPI().get_tweet_count(query)

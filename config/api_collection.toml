@@ -1,0 +1,4 @@
+raw_query="($TSLA OR $TWTR OR $AAPL OR $NFLX OR $FB OR $AMZN OR $GM OR $AMD OR $NVDA OR $MSFT OR $DIS OR $GOOGL OR $F OR $GOOG OR $PYPL OR $CAT OR $T OR $CVX OR $BAC OR $AAL OR $BA OR $PFE OR $INTC OR $JPM OR $OXY OR $ES OR $WMT OR $UAL OR $DAL OR $C OR $KO OR $XOM OR $COST OR $CCL OR $MRNA OR $MU OR $GS OR $WFC OR $QCOM OR $JNJ OR $MS OR $CRM OR $SBUX OR $VZ OR $ABBV OR $V OR $MMM OR $WBD OR $NCLH OR $PG)"
+query_options="lang:en -is:retweet -is:nullcast -has:images -has:videos"
+# removed: AME, OGN, TEL, AMP, KEY, STX
+# for cleaning, remove tweets with: NFT, token, coin, crypto, wallet, web3
