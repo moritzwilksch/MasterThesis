@@ -52,8 +52,8 @@ class TwitterAPICollector:
 
 
 params = {
-    "start_time": "2022-05-22T13:00:00Z",
-    "end_time": "2022-05-22T13:02:00Z",
+    "start_time": "2021-04-01T00:00:00Z",
+    "end_time": "2021-05-01T00:00:00Z",
     "max_results": 10,
 }
 
