@@ -12,3 +12,4 @@ aiohttp
 requests
 polars
 python-dotenv
+pymongoarrow

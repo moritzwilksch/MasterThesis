@@ -23,10 +23,6 @@ class TwitterAPICollector:
                 params=self.params, next_token=next_token
             )
 
-            data_to_write = response.json().get("data")
-            next_token = response.json().get("meta").get("next_token")
-            newest_id = response.json().get("meta").get("newest_id")
-
             # rate limited
             if response.status_code == 429:
                 log.warn(f"Got a 429. Sleeping for 2 min...")
@@ -38,12 +34,28 @@ class TwitterAPICollector:
                 log.warn("Response not ok!")
                 DB.thesis.prod_log.insert_one(response.json())
 
+            # cast to json and extract important parameters
+            response_as_json = response.json()
+            try:
+                data_to_write = response_as_json.get("data")
+                next_token = response_as_json.get("meta").get("next_token")
+                newest_id = response_as_json.get("meta").get("newest_id")
+            except:
+                log.warn(
+                    "Error extracting data, next_token, or newest_id from response."
+                )
+                DB.thesis.prod_log.insert_one(response_as_json)
+                log.info("Logged problematic response to db")
+                continue
+
             # no more data = finish
             if next_token is None:
                 log.info(f"Did not receive next_token. Stopping.")
                 break
 
-            if data_to_write is None:
+            if (
+                data_to_write is None
+            ):  # just save guards the DB write which fails on empty data
                 log.warn("No data to write!")
             else:
                 # persist to DB
@@ -54,8 +66,8 @@ class TwitterAPICollector:
 
 
 params = {
-    "start_time": "2021-05-01T00:00:00Z",  # oldest time
-    "end_time": "2021-06-01T00:00:00Z",  # newest, most recent time
+    "start_time": "2022-01-01T00:00:00Z",  # oldest time
+    "end_time": "2022-02-01T00:00:00Z",  # newest, most recent time
     "max_results": 500,
 }
 
