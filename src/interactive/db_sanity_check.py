@@ -7,16 +7,20 @@ import polars as pl
 import pyarrow
 import seaborn as sns
 from pymongoarrow.api import Schema
-from pymongoarrow.monkey import patch_all
+
+# from pymongoarrow.monkey import patch_all,
+from pymongoarrow.api import find_arrow_all
 
 from src.utils.db import client as DB
 
-_ = patch_all()
 
 
 schema = Schema({"created_at": pyarrow.string(), "text": pyarrow.string()})
-data = DB.thesis.prod_tweet.find_arrow_all(
-    query={}, projection={"_id": False, "created_at": True, "text": True}, schema=schema
+data = find_arrow_all(
+    DB.thesis.prod_tweet,
+    query={},
+    projection={"_id": False, "created_at": True, "text": True},
+    schema=schema,
 )
 
 df = pl.from_arrow(data)

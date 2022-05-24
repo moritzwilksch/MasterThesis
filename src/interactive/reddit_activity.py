@@ -1,5 +1,6 @@
 #%%
 import pandas as pd
+from datetime import datetime
 import polars as pl
 import requests
 
@@ -8,6 +9,8 @@ url = "https://api.pushshift.io/reddit/submission/search"
 
 params = {
     "subreddit": "Investing",
+    "before": int(datetime(2022, 5, 1).timestamp()),
+    "after": int(datetime(2022, 4, 1).timestamp()),
     "size": 1000,
 }
 response = requests.get(url, params=params)
