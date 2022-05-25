@@ -26,6 +26,7 @@ data = find_arrow_all(
 df = pl.from_arrow(data)
 
 
+
 #%%
 n_per_day = (
     df.with_column(pl.col("created_at").str.strptime(pl.Datetime))
