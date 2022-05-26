@@ -1,6 +1,6 @@
 #%%
 import time
-from turtle import width
+from abc import ABC
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -11,11 +11,14 @@ from rich.progress import track
 from src.utils.db import get_client
 
 DB = get_client()
+from rich import print
+
 from src.utils.log import log
-from src.utils.plotting import set_style
+from src.utils.plotting import (Colors, scale_lightness, set_style,
+                                when_then_else)
 from src.utils.twitter_api import TwitterAPI
 
-coll = client["thesis"]["tweet_counts"]
+coll = DB["thesis"]["tweet_counts"]
 set_style()
 
 
@@ -59,41 +62,89 @@ def scrape_to_db():
 
 
 #%%
-res = list(coll.find({}, {"_id": 0}))
-# counts = pd.DataFrame(res)
-counts = pl.DataFrame(res)
+class Plots(ABC):
+    @classmethod
+    def volume_by_top_n(cls, n: int):
+        top_pct = (
+            (
+                counts.sort("total_tweet_count")
+                .tail(n)
+                .select(pl.col("total_tweet_count").cast(pl.Float32))
+                .sum()
+                / counts.select("total_tweet_count").sum()
+            )
+            .to_numpy()
+            .ravel()[0]
+        )
 
-#%%
-plotdf = (
-    counts.with_column((pl.col("total_tweet_count") / 30).alias("avg_daily"))
-    .filter(pl.col("avg_daily") >= 100)
-    .sort("avg_daily", reverse=True)
-)
-print(f"Matching {plotdf.height} tickers")
-fig, ax = plt.subplots(figsize=(9, 11))
-sns.barplot(
-    data=plotdf.to_pandas(),
-    orient="h",
-    x="avg_daily",
-    y="ticker",
-    ax=ax,
-    color="k",
-    dodge=False,
-)
+        print(f"Top {n} tickers created {top_pct:.1%} of tweet volume.")
 
-ax.axvline(x=100, ls="--", color="white")
+    @classmethod
+    def top_tickers_tweet_count(cls, counts: pl.DataFrame, save: bool = False):
+        excluded = ["AME", "OGN", "TEL", "AMP", "KEY", "STX"]
 
-ax.set_xlabel("Average number of tweets per day", weight="bold")
-ax.set_ylabel("Ticker", weight="bold")
+        cls.volume_by_top_n(20)
+        cls.volume_by_top_n(56)
 
-sns.despine()
-plt.savefig(
-    "outputs/plots/tweet_counts.png", dpi=300, bbox_inches="tight", facecolor="white"
-)
+        plotdf = (
+            counts.with_column((pl.col("total_tweet_count") / 30).alias("avg_daily"))
+            .filter(pl.col("avg_daily") >= 100)
+            .sort("avg_daily", reverse=False)
+            # .tail(20)
+            .with_columns(
+                [
+                    when_then_else(
+                        pl.col("ticker").is_in(excluded), pl.lit(1), pl.lit(0)
+                    ).alias("linewidth"),
+                    when_then_else(
+                        pl.col("ticker").is_in(excluded),
+                        pl.lit(
+                            scale_lightness(
+                                sns.desaturate(Colors.UPBLUE.value, 0.1), 4.1
+                            )
+                        ),
+                        pl.lit(Colors.UPBLUE.value),
+                    ).alias("color"),
+                ]
+            )
+        )
+
+        print(f"Matching {plotdf.height} tickers")
+
+        fig, ax = plt.subplots(figsize=(15, 7))
+        plotdf_top20 = plotdf.tail(20)
+
+        ax.barh(
+            y=plotdf_top20["ticker"],
+            width=plotdf_top20["avg_daily"],
+            height=0.7,
+            color=plotdf_top20["color"],
+            linestyle="--",
+            linewidth=plotdf_top20["linewidth"],
+            ec=Colors.UPBLUE.value,
+            zorder=10,
+        )
+
+        for ticker, p in zip(plotdf_top20["ticker"], ax.patches):
+            if ticker in excluded:
+                p.set_label("Excluded: cryptocurrency")
+                break
+
+        ax.grid(True, "major", axis="x", zorder=-10, ls="--")
+        ax.set_xlabel("Average number of tweets per day", weight="bold")
+        ax.legend(framealpha=1)
+        ax.margins(y=0.01)
+        sns.despine(left=True)
+
+        if save:
+            plt.savefig(
+                "outputs/plots/tweet_counts.pdf",
+                # dpi=300,
+                bbox_inches="tight",
+                facecolor="white",
+            )
+            plt.close()
 
 
-#%%
-query = " OR ".join(f"${t}" for t in plotdf["ticker"])
-query = f"({query})"
-#%%
-# TwitterAPI().get_tweet_count(query)
+counts = pl.DataFrame(list(coll.find({}, {"_id": 0})))
+Plots.top_tickers_tweet_count(counts, save=False)
