@@ -6,13 +6,12 @@ import pandas as pd
 import polars as pl
 import pyarrow
 import seaborn as sns
-from pymongoarrow.api import Schema
-
 # from pymongoarrow.monkey import patch_all,
-from pymongoarrow.api import find_arrow_all
+from pymongoarrow.api import Schema, find_arrow_all
 
-from src.utils.db import client as DB
+from src.utils.db import get_client
 
+DB = get_client()
 
 
 schema = Schema({"created_at": pyarrow.string(), "text": pyarrow.string()})
@@ -24,7 +23,6 @@ data = find_arrow_all(
 )
 
 df = pl.from_arrow(data)
-
 
 
 #%%

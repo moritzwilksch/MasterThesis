@@ -8,7 +8,9 @@ import polars as pl
 import seaborn as sns
 from rich.progress import track
 
-from src.utils.db import client
+from src.utils.db import get_client
+
+DB = get_client()
 from src.utils.log import log
 from src.utils.plotting import set_style
 from src.utils.twitter_api import TwitterAPI

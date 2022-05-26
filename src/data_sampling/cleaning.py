@@ -1,11 +1,14 @@
 #%%
 from abc import ABC
+
+import pandas as pd
 import polars as pl
 from rich import print
-import pandas as pd
 
 #%%
-df = pl.read_parquet("data/raw/db_export_small.parquet")  # small only has date, text, id
+df = pl.read_parquet(
+    "data/raw/db_export_small.parquet"
+)  # small only has date, text, id
 
 #%%
 def track_size(f: callable, *args, **kwargs) -> callable:
@@ -18,6 +21,13 @@ def track_size(f: callable, *args, **kwargs) -> callable:
 
 
 class Cleaning(ABC):
+    URL_REGEX = (
+        r"[A-Za-z0-9]+://[A-Za-z0-9%-_]+(/[A-Za-z0-9%-_])*(#|\\?)[A-Za-z0-9%-_&=]*"
+    )
+    CASHTAG_REGEX = r"\$[a-zA-Z]+"
+    HASHTAG_REGEX = r"\#\w+"
+    MENTION_REGEX = r"@[A-Za-z0-9_]+"
+
     @staticmethod
     # @track_size
     def drop_duplicates(df: pl.DataFrame) -> pl.DataFrame:
@@ -27,21 +37,27 @@ class Cleaning(ABC):
     # @track_size
     def add_num_cashtags_col(df: pl.DataFrame) -> pl.DataFrame:
         # TODO: fix this as soon as polars implements .str.extract_all()
-        num_cashtags = df.select("text").to_pandas()["text"].str.count(r"\$[a-zA-Z]+")
+        num_cashtags = (
+            df.select("text").to_pandas()["text"].str.count(Cleaning.CASHTAG_REGEX)
+        )
         return df.with_column(pl.from_pandas(num_cashtags).alias("n_cashtags"))
 
     @staticmethod
     # @track_size
     def add_num_hashtags_col(df: pl.DataFrame) -> pl.DataFrame:
         # TODO: fix this as soon as polars implements .str.extract_all()
-        num_hashtags = df.select("text").to_pandas()["text"].str.count(r"\#\w+")
+        num_hashtags = (
+            df.select("text").to_pandas()["text"].str.count(Cleaning.HASHTAG_REGEX)
+        )
         return df.with_column(pl.from_pandas(num_hashtags).alias("n_hashtags"))
 
     @staticmethod
     # @track_size
     def add_num_mentions_col(df: pl.DataFrame) -> pl.DataFrame:
         # TODO: fix this as soon as polars implements .str.extract_all()
-        num_hashtags = df.select("text").to_pandas()["text"].str.count(r"@[A-Za-z0-9_]+")
+        num_hashtags = (
+            df.select("text").to_pandas()["text"].str.count(Cleaning.MENTION_REGEX)
+        )
         return df.with_column(pl.from_pandas(num_hashtags).alias("n_mentions"))
 
     @staticmethod
@@ -67,7 +83,11 @@ class Cleaning(ABC):
 
         return df
 
+    def remove_hyperlinks(df: pl.DataFrame) -> pl.DataFrame:
+        return df.with_column(pl.col("text").str.replace_all(Cleaning.URL_REGEX, ""))
 
+
+#%%
 clean: pl.DataFrame = (
     df.pipe(Cleaning.drop_duplicates)
     .pipe(Cleaning.add_num_cashtags_col)
@@ -81,6 +101,7 @@ clean: pl.DataFrame = (
 #%%
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 from src.utils.plotting import set_style
 
 set_style()
@@ -90,3 +111,13 @@ sns.histplot(clean.select("n_hashtags").to_numpy().ravel(), binwidth=1)
 #%%
 # clean.filter((pl.col("n_hashtags") > 5) & (pl.col("n_hashtags") < 10))
 clean
+
+#%%
+sample = clean.sample(1000).transpose()
+
+#%%
+sample = Cleaning.remove_hyperlinks(clean.sample(1000)).transpose()
+
+#%%
+with open("outputs/dump/clean_sample.md", "w") as f:
+    f.writelines(sample.transpose().to_pandas().to_markdown())

@@ -4,7 +4,9 @@ import time
 import requests
 from dotenv import load_dotenv
 
-from src.utils.db import client as DB
+from src.utils.db import get_client
+
+DB = get_client()
 from src.utils.log import log
 from src.utils.twitter_api import TwitterAPI
 

@@ -1,7 +1,8 @@
-from rich.panel import Panel
 import polars as pl
 from rich import print
 from rich.console import Console
+from rich.panel import Panel
+
 c = Console()
 
 df = pl.read_parquet("data/raw/text_only.parquet")

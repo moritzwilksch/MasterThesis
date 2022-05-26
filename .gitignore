@@ -1,4 +1,5 @@
 outputs/examples/examples.txt
+outputs/dump/*
 data/raw/*
 backup.gz
 
