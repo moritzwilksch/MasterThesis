@@ -2,6 +2,7 @@ outputs/examples/examples.txt
 outputs/dump/*
 data/raw/*
 backup.gz
+labeled_tweets_backup.gz
 
 
 
