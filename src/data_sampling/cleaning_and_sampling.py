@@ -4,11 +4,12 @@ from abc import ABC
 import pandas as pd
 import polars as pl
 from rich import print
+from src.utils.storage import bucket
+from src.utils.db import get_client
+DB = get_client()
 
 #%%
-df = pl.read_parquet(
-    "data/raw/db_export_small.parquet"
-)  # small only has date, text, id
+df = pl.read_parquet("data/raw/db_export_small.parquet")  # small only has date, text, id
 
 #%%
 def track_size(f: callable, *args, **kwargs) -> callable:
@@ -59,29 +60,23 @@ class Cleaning(ABC):
     @classmethod
     @track_size
     def add_num_cashtags_col(cls, df: pl.DataFrame) -> pl.DataFrame:
-        # TODO: fix this as soon as polars implements .str.extract_all()
-        num_cashtags = (
-            df.select("text").to_pandas()["text"].str.count(cls.CASHTAG_REGEX)
+        return df.with_column(
+            pl.col("text").str.count_match(cls.CASHTAG_REGEX).alias("n_cashtags")
         )
-        return df.with_column(pl.from_pandas(num_cashtags).alias("n_cashtags"))
 
     @classmethod
     @track_size
     def add_num_hashtags_col(cls, df: pl.DataFrame) -> pl.DataFrame:
-        # TODO: fix this as soon as polars implements .str.extract_all()
-        num_hashtags = (
-            df.select("text").to_pandas()["text"].str.count(cls.HASHTAG_REGEX)
+        return df.with_column(
+            pl.col("text").str.count_match(cls.HASHTAG_REGEX).alias("n_hashtags")
         )
-        return df.with_column(pl.from_pandas(num_hashtags).alias("n_hashtags"))
 
     @classmethod
     @track_size
     def add_num_mentions_col(cls, df: pl.DataFrame) -> pl.DataFrame:
-        # TODO: fix this as soon as polars implements .str.extract_all()
-        num_hashtags = (
-            df.select("text").to_pandas()["text"].str.count(cls.MENTION_REGEX)
+        return df.with_column(
+            pl.col("text").str.count_match(cls.MENTION_REGEX).alias("n_mentions")
         )
-        return df.with_column(pl.from_pandas(num_hashtags).alias("n_mentions"))
 
     @classmethod
     @track_size
@@ -94,7 +89,7 @@ class Cleaning(ABC):
     @track_size
     def filter_num_hashtags_and_cashtags(cls, df: pl.DataFrame) -> pl.DataFrame:
         return df.filter(pl.col("n_cashtags") <= 4).filter(
-            pl.col("hashtags") <= 7
+            pl.col("n_hashtags") <= 7
         )  # lots of spam with >= 8 hashtags
 
     @classmethod
@@ -131,7 +126,7 @@ class Cleaning(ABC):
         ).sum(axis=1)
 
         return df.with_column(n_cryptoterms_col.alias("n_cryptoterms")).filter(
-            pl.col("n_cryptoterms") < 2
+            pl.col("n_cryptoterms") <= 2
         )
 
 
@@ -148,38 +143,27 @@ clean: pl.DataFrame = (
     .pipe(Cleaning.remove_crypto_posts)
 )
 
-#%%
-clean.pipe(Cleaning.remove_crypto_posts)
+
+
+#%% 
+if False:  # DANGER ZONE
+    prompt = input("DO YOU WANT TO SAMPLE AGAIN? OVERWRITES LOCAL FILE, REMOTE FILE, AND DB!!")
+    if prompt != "yes":
+        print("Changing nothing. Exiting.")
+        exit(0)
+
+    sample = clean.sample(15_000, seed=42)
+    with open("outputs/dump/clean_sample.txt", "w") as f:
+        f.writelines(f"\n {'-'*256} \n".join(sample.select("text").to_series().to_numpy()))
+
+
+    sample.to_parquet("data/raw/sample.parquet")
+    bucket.upload_file("data/raw/sample.parquet", "data/raw/sample.parquet")
+
+    dicts = sample.to_dicts()
+    for dd in dicts:
+        dd["label"] = ""
+
+    DB.thesis.labeled_tweets.insert_many(dicts)
 
 #%%
-# sample = clean.sample(1000)
-sample = clean.filter(pl.col("n_hashtags") == 7).sample(1000)
-with open("outputs/dump/clean_sample.txt", "w") as f:
-    f.writelines(f"\n {'-'*256} \n".join(sample.select("text").to_series().to_numpy()))
-
-
-#%%
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-
-# from src.utils.plotting import set_style
-
-# set_style()
-# fig, ax = plt.subplots(figsize=(15, 6))
-# sns.histplot(clean.select("n_hashtags").to_numpy().ravel(), binwidth=1)
-
-
-#%%
-sample = clean.sample(100_000)
-
-#%%
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-tfidf_vec = TfidfVectorizer()
-mtx = tfidf_vec.fit_transform(sample.select("text").to_numpy().ravel())
-
-#%%
-from sklearn.metrics import pairwise_distances
-from sklearn.metrics.pairwise import cosine_similarity
-
-sims = pairwise_distances(mtx, n_jobs=-1)

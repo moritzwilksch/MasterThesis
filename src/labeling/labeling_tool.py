@@ -11,8 +11,8 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.style import Style
 from rich.text import Text
-
-from src.utils.logging import log
+from datetime import datetime
+from src.utils.log import log
 
 config = toml.load("config/data_labeling.toml")
 
@@ -62,7 +62,7 @@ class MongoConnector:
         Returns:
             A pl.DataFrame with all data from the database.
         """
-        result = list(self.collection.find({}))
+        result = list(self.collection.find({}, projection={"_id": True, "text": True, "label": True}))
         for rr in result:
             rr["_id"] = str(rr["_id"])
 
@@ -76,7 +76,7 @@ class DataLabeler:
         self.conn = conn
         self.console = Console()
         self.inmem_df = self.conn.get_all_data_as_frame()
-        self.legend = "1...POS\t2...NEU\t3...NEG\t0...SPAM"
+        self.legend = "1...POS\t2...NEU\t3...NEG\t0...UNCERTAIN"
 
     def show_doc_by_id(self, doc_id: str, status: str):
         """
@@ -92,7 +92,7 @@ class DataLabeler:
         sample = self.inmem_df.filter(pl.col("_id") == doc_id).to_dicts()[0]
 
         p = Panel(
-            sample.get("tweet"),
+            sample.get("text"),
             title=Text(f"id = {sample['_id']}"),
             border_style=Style(dim=True),
         )
@@ -109,18 +109,14 @@ class DataLabeler:
 
     def sample_one_from_frame(self) -> str:
         """
-        Samples examples that are a) unlabeled and b) have a high entropy.
+        Samples example that is unlabeled.
 
         Returns:
             The _id of the sampled example as a string.
         """
-        unlabeled_df = self.inmem_df.filter(pl.col("label").is_null())
 
-        highest_entropy = (
-            unlabeled_df.select(pl.col("entropy").max()).to_numpy().ravel()[0]
-        )
         return (
-            unlabeled_df.filter(pl.col("entropy") == highest_entropy)
+            self.inmem_df.filter(pl.col("label") == "")
             .sample(n=1)
             .select("_id")
             .to_series()
@@ -136,7 +132,7 @@ class DataLabeler:
             label: The label to update the document with.
         """
         update_result = self.conn.collection.update_one(
-            {"_id": ObjectId(doc_id)}, {"$set": {"label": label}}
+            {"_id": ObjectId(doc_id)}, {"$set": {"label": label, "labeled_at": datetime.now()}}
         )
         if update_result.matched_count != 1:
             raise ValueError(
@@ -152,18 +148,13 @@ class DataLabeler:
 
     def run(self):
         while True:
-            total_docs = df.height
+            total_docs = self.inmem_df.height
             labeled_docs = (
-                self.inmem_df.select(pl.col("label").is_not_null().cast(pl.Int16).sum())
+                self.inmem_df.select((pl.col("label") != "").cast(pl.Int16).sum())
                 .to_numpy()
                 .ravel()[0]
             )
             status = f"{labeled_docs} docs labeled, {total_docs} docs in DB, {total_docs - labeled_docs} docs remaining."
-
-            if labeled_docs % 3 == 0 and labeled_docs > 0:
-                log.warning("Please train active learning model now!")
-                time.sleep(2)
-                # exit(0)  # TODO: train AL model here and update entropy in Mongodb
 
             id_to_be_labeled = self.sample_one_from_frame()
             label = self.show_doc_by_id(id_to_be_labeled, status=status)
@@ -182,16 +173,6 @@ if __name__ == "__main__":
         collection=config["database"]["collection"],
         authSource=config["database"]["name"],
     )
-
-    df = pl.DataFrame(
-        {
-            "user": ["a", "b", "c", "d", "e", "f", "g"],
-            "tweet": ["AASDF", "BASDF", "CASDF", "DASDF", "EASDF", "FASDF", "GASDF"],
-        }
-    )
-
-    # conn.collection.drop()
-    conn.fill_db_from_frame(df)
 
     labeler = DataLabeler(conn)
     labeler.run()

@@ -1,3 +1,3 @@
 [database]
-name = "data_labeling"
-collection = "dev_coll"
+name = "thesis"
+collection = "labeled_tweets"
