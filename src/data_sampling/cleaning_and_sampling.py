@@ -4,12 +4,16 @@ from abc import ABC
 import pandas as pd
 import polars as pl
 from rich import print
-from src.utils.storage import bucket
+
 from src.utils.db import get_client
+from src.utils.storage import bucket
+
 DB = get_client()
 
 #%%
-df = pl.read_parquet("data/raw/db_export_small.parquet")  # small only has date, text, id
+df = pl.read_parquet(
+    "data/raw/db_export_small.parquet"
+)  # small only has date, text, id
 
 #%%
 def track_size(f: callable, *args, **kwargs) -> callable:
@@ -144,18 +148,20 @@ clean: pl.DataFrame = (
 )
 
 
-
-#%% 
+#%%
 if False:  # DANGER ZONE
-    prompt = input("DO YOU WANT TO SAMPLE AGAIN? OVERWRITES LOCAL FILE, REMOTE FILE, AND DB!!")
+    prompt = input(
+        "DO YOU WANT TO SAMPLE AGAIN? OVERWRITES LOCAL FILE, REMOTE FILE, AND DB!!"
+    )
     if prompt != "yes":
         print("Changing nothing. Exiting.")
         exit(0)
 
     sample = clean.sample(15_000, seed=42)
     with open("outputs/dump/clean_sample.txt", "w") as f:
-        f.writelines(f"\n {'-'*256} \n".join(sample.select("text").to_series().to_numpy()))
-
+        f.writelines(
+            f"\n {'-'*256} \n".join(sample.select("text").to_series().to_numpy())
+        )
 
     sample.to_parquet("data/raw/sample.parquet")
     bucket.upload_file("data/raw/sample.parquet", "data/raw/sample.parquet")

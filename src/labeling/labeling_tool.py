@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 
 import polars as pl
 import toml
@@ -11,7 +12,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.style import Style
 from rich.text import Text
-from datetime import datetime
+
 from src.utils.log import log
 
 config = toml.load("config/data_labeling.toml")
@@ -62,7 +63,11 @@ class MongoConnector:
         Returns:
             A pl.DataFrame with all data from the database.
         """
-        result = list(self.collection.find({}, projection={"_id": True, "text": True, "label": True}))
+        result = list(
+            self.collection.find(
+                {}, projection={"_id": True, "text": True, "label": True}
+            )
+        )
         for rr in result:
             rr["_id"] = str(rr["_id"])
 
@@ -132,7 +137,8 @@ class DataLabeler:
             label: The label to update the document with.
         """
         update_result = self.conn.collection.update_one(
-            {"_id": ObjectId(doc_id)}, {"$set": {"label": label, "labeled_at": datetime.now()}}
+            {"_id": ObjectId(doc_id)},
+            {"$set": {"label": label, "labeled_at": datetime.now()}},
         )
         if update_result.matched_count != 1:
             raise ValueError(
