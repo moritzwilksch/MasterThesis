@@ -13,3 +13,4 @@ requests
 polars
 python-dotenv
 pymongoarrow
+shap

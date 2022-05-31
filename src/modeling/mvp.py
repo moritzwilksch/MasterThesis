@@ -1,12 +1,29 @@
 #%%
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import polars as pl
+import seaborn as sns
+import shap
+import toml
 from matplotlib import projections
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix, roc_auc_score)
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.svm import SVC
 
 from src.utils.db import get_client
+from src.utils.preprocessing import Preprocessor
 
 DB = get_client()
+
+#%%
+stopwords = toml.load("config/stopwords.toml").get("stopwords")
+
 
 #%%
 df = pl.from_dicts(
@@ -18,27 +35,17 @@ df = pl.from_dicts(
     )
 )
 
-df = df.with_column(
-    pl.col("text")
-    .str.replace_all(r"&gt;", ">")
-    .str.replace_all(r"&lt;", "<")
-    .str.replace_all(r"&amp;", "&")
-    .str.replace_all(r"\$\w+", "$TICK")
-    .str.replace_all(r"\d", "9")
-)
+# sw_remove_expr = pl.col("text").str.to_lowercase()
+# for word in stopwords:
+#     sw_remove_expr = sw_remove_expr.str.replace_all(f" {word} ", "")
 
-# df = df.filter(pl.col("label") != "2")
-# df = df.with_column(pl.col("text").str.replace(r"\d", "9")).with_column(pl.when(pl.col("label") == "2").then("spam").otherwise("ok").alias("label"))
+prepper = Preprocessor()
+df = prepper.process(df)
 
+df = df.filter(pl.col("label") != "2")
 df = df.to_pandas()
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, roc_auc_score
+
 #%%
-from sklearn.model_selection import KFold, cross_val_score
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
-from sklearn.svm import SVC
 
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 
@@ -49,28 +56,62 @@ for train_idx, val_idx in kf.split(df["text"], df["label"]):
     ytrain, yval = df.loc[train_idx, "label"], df.loc[val_idx, "label"]
 
     # vectorizer = CountVectorizer()
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4))
     xtrain = vectorizer.fit_transform(xtrain)
     xval = vectorizer.transform(xval)
 
-    model = LogisticRegression()
-    model = MultinomialNB()
-    model = RandomForestClassifier()
-    model = SVC(probability=True)
+    model = LogisticRegression(n_jobs=-1, class_weight="balanced")
+    # model = MultinomialNB()
+    # model = RandomForestClassifier(n_jobs=-1)
+    # model = SVC(probability=True)
     model.fit(xtrain, ytrain)
 
     accs.append(accuracy_score(yval, model.predict(xval)))
     aucs.append(roc_auc_score(yval, model.predict_proba(xval), multi_class="ovr"))
 
+
 print(f"acc = {np.mean(accs):.2%} (SD={np.std(accs):.4})")
 print(f"auc = {np.mean(aucs):.3} (SD={np.std(aucs):.4})")
 
 #%%
-from sklearn.metrics import classification_report
 
 print(classification_report(yval, model.predict(xval)))
+print(confusion_matrix(yval, model.predict(xval)))
+
 
 #%%
-def demo(s: str):
-    v = vectorizer.transform([s])
+def demo(s):
+    v = vectorizer.transform(s)
     return model.predict_proba(v)
+
+
+#%%
+
+explainer = shap.Explainer(
+    model,
+    xtrain,
+    feature_names=vectorizer.get_feature_names_out(),
+    output_names=["unc", "pos", "neu", "neg"],
+)
+shap_values = explainer(xval)
+
+#%%
+
+
+def plot_top_bottom(shap_values, class_idx, n):
+    averaged_shap_values = shap_values[:, :, class_idx].mean(0).values
+
+    top_idxs = averaged_shap_values.argsort()[-n:]
+    # bottom_idxs = shap_values[:, :, 1].mean(0).values.argsort()[:n]
+
+    top_words = vectorizer.get_feature_names_out()[top_idxs]
+    # bottom_words = vectorizer.get_feature_names_out()[bottom_idxs]
+
+    fig, axes = plt.subplots(1, 1, figsize=(10, 5))
+    axes.barh(y=top_words, width=averaged_shap_values[top_idxs])
+    # axes[1].barh(y=bottom_words, width=averaged_shap_values[bottom_idxs])
+    fig.tight_layout()
+    sns.despine()
+
+
+plot_top_bottom(shap_values, 1, 20)
