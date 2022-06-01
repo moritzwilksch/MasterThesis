@@ -10,3 +10,6 @@ backup-db:
 	python src/scripts/upload_backup.py
 label:
 	python src/labeling/labeling_tool.py
+
+dashboard:
+	optuna-dashboard "sqlite:///tuning/optuna.db"

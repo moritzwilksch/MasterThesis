@@ -147,4 +147,4 @@ class Plots(ABC):
 
 
 counts = pl.DataFrame(list(coll.find({}, {"_id": 0})))
-Plots.top_tickers_tweet_count(counts, save=False)
+Plots.top_tickers_tweet_count(counts, save=True)

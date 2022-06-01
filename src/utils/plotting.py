@@ -24,7 +24,7 @@ def set_style():
     import matplotlib_inline.backend_inline
 
     matplotlib_inline.backend_inline.set_matplotlib_formats("svg")
-    plt.rcParams["font.family"] = "Charter"
+    plt.rcParams["font.family"] = "Bitstream Vera Sans"
     plt.rcParams["font.size"] = 16
 
 
