@@ -10,8 +10,12 @@ from matplotlib import projections
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (accuracy_score, classification_report,
-                             confusion_matrix, roc_auc_score)
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    roc_auc_score,
+)
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.svm import SVC
@@ -42,7 +46,7 @@ df = pl.from_dicts(
 prepper = Preprocessor()
 df = prepper.process(df)
 
-# df = df.filter(pl.col("label") != "2")
+df = df.filter(pl.col("label") != "2")
 df = df.with_column(
     pl.when(pl.col("label") == "0")
     .then(pl.lit("2"))
@@ -50,45 +54,6 @@ df = df.with_column(
     .alias("label")
 )
 df = df.to_pandas()
-
-# #%%
-
-# kf = KFold(n_splits=5, shuffle=True, random_state=42)
-
-# accs = []
-# aucs = []
-# for train_idx, val_idx in kf.split(df["text"], df["label"]):
-#     xtrain, xval = df.loc[train_idx, "text"], df.loc[val_idx, "text"]
-#     ytrain, yval = df.loc[train_idx, "label"], df.loc[val_idx, "label"]
-
-#     # vectorizer = CountVectorizer()
-#     vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4))
-#     xtrain = vectorizer.fit_transform(xtrain)
-#     xval = vectorizer.transform(xval)
-
-#     model = LogisticRegression(n_jobs=-1)
-#     # model = MultinomialNB()
-#     # model = RandomForestClassifier(n_jobs=-1)
-#     # model = SVC(probability=True)
-#     model.fit(xtrain, ytrain)
-
-#     accs.append(accuracy_score(yval, model.predict(xval)))
-#     aucs.append(roc_auc_score(yval, model.predict_proba(xval), multi_class="ovr"))
-
-
-# print(f"acc = {np.mean(accs):.2%} (SD={np.std(accs):.4})")
-# print(f"auc = {np.mean(aucs):.3} (SD={np.std(aucs):.4})")
-
-# #%%
-
-# print(classification_report(yval, model.predict(xval)))
-# print(confusion_matrix(yval, model.predict(xval)))
-
-
-# #%%
-# def demo(s):
-#     v = vectorizer.transform(s)
-#     return model.predict_proba(v)
 
 
 # #%%
@@ -124,7 +89,17 @@ df = df.to_pandas()
 
 #%%
 from src.modeling.models import LogisticRegressionModel
+from sklearn.model_selection import train_test_split
 
 #%%
 lrm = LogisticRegressionModel(df)
 lrm.run_optuna()
+
+
+#%%
+xtrain, xval, ytrain, yval = train_test_split(df["text"], df["label"])
+lrm.refit_best_model(xtrain, ytrain)
+
+#%%
+print(classification_report(yval, lrm.model.predict(xval)))
+print(confusion_matrix(yval, lrm.model.predict(xval)))

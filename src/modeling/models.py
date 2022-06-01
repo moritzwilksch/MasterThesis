@@ -13,10 +13,10 @@ class LogisticRegressionModel:
     def __init__(self, train_val_data):
         self.train_val_data = train_val_data
         self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
-        self.study = optuna.delete_study(
-            storage="sqlite:///tuning/optuna.db",
-            study_name="LogisticRegression",
-        )
+        # self.study = optuna.delete_study(
+        #     storage="sqlite:///tuning/optuna.db",
+        #     study_name="LogisticRegression",
+        # )
         self.study = optuna.create_study(
             storage="sqlite:///tuning/optuna.db",
             study_name="LogisticRegression",
@@ -24,11 +24,32 @@ class LogisticRegressionModel:
             load_if_exists=True,
         )
 
+    def get_pipeline(self, params, prep_params):
+        """Returns pipeline"""
+        return Pipeline(
+            [
+                (
+                    "vectorizer",
+                    TfidfVectorizer(
+                        analyzer=prep_params["analyzer"],
+                        ngram_range=prep_params["ngram_range"],
+                    ),
+                ),
+                (
+                    "model",
+                    LogisticRegression(
+                        **params, random_state=42, n_jobs=-1, max_iter=250
+                    ),
+                ),
+            ]
+        )
+
     def refit_best_model(self, refit_xtrain, refit_ytrain):
         """Fits model to data"""
-        self.model = LogisticRegression(
-            **self.study.best_params, n_jobs=-1, random_state=42
-        )
+        params = {"C": 1.3888279023427723}
+        prep_params = {"analyzer": "char_wb", "ngram_range": (4, 4)}
+
+        self.model = self.get_pipeline(params, prep_params)
         self.model.fit(refit_xtrain, refit_ytrain)
 
     def run_optuna(self, n_trials: int = 100):
@@ -54,25 +75,9 @@ class LogisticRegressionModel:
             prep_params["ngram_range"] = (
                 prep_params["ngram_range"],
                 prep_params["ngram_range"],
-            ) 
+            )
 
-        pipe = Pipeline(
-            [
-                (
-                    "vectorizer",
-                    TfidfVectorizer(
-                        analyzer=prep_params["analyzer"],
-                        ngram_range=prep_params["ngram_range"],
-                    ),
-                ),
-                (
-                    "model",
-                    LogisticRegression(
-                        **params, random_state=42, n_jobs=-1, max_iter=250
-                    ),
-                ),
-            ]
-        )
+        pipe = self.get_pipeline(params, prep_params)
 
         score = cross_val_score(
             pipe,
