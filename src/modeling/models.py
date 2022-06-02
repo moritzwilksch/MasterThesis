@@ -13,10 +13,10 @@ class LogisticRegressionModel:
     def __init__(self, train_val_data):
         self.train_val_data = train_val_data
         self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
-        # self.study = optuna.delete_study(
-        #     storage="sqlite:///tuning/optuna.db",
-        #     study_name="LogisticRegression",
-        # )
+        self.study = optuna.delete_study(
+            storage="sqlite:///tuning/optuna.db",
+            study_name="LogisticRegression",
+        )
         self.study = optuna.create_study(
             storage="sqlite:///tuning/optuna.db",
             study_name="LogisticRegression",
@@ -24,32 +24,38 @@ class LogisticRegressionModel:
             load_if_exists=True,
         )
 
-    def get_pipeline(self, params, prep_params):
+    def get_pipeline(self):
         """Returns pipeline"""
         return Pipeline(
             [
                 (
                     "vectorizer",
-                    TfidfVectorizer(
-                        analyzer=prep_params["analyzer"],
-                        ngram_range=prep_params["ngram_range"],
-                    ),
+                    TfidfVectorizer(),  # params will be set later
                 ),
                 (
                     "model",
-                    LogisticRegression(
-                        **params, random_state=42, n_jobs=-1, max_iter=250
-                    ),
+                    LogisticRegression(random_state=42, n_jobs=-1, max_iter=250),
                 ),
             ]
         )
 
     def refit_best_model(self, refit_xtrain, refit_ytrain):
         """Fits model to data"""
-        params = {"C": 1.3888279023427723}
-        prep_params = {"analyzer": "char_wb", "ngram_range": (4, 4)}
 
-        self.model = self.get_pipeline(params, prep_params)
+        self.model = self.get_pipeline()
+
+        params = self.study.best_params.copy()
+        if params["vectorizer__analyzer"] == "word":
+            params["vectorizer__ngram_range"] = (1, params["vectorizer__ngram_range"])
+
+        else:
+            params["vectorizer__ngram_range"] = (
+                params["vectorizer__ngram_range"],
+                params["vectorizer__ngram_range"],
+            )
+
+        self.model.set_params(**params)
+
         self.model.fit(refit_xtrain, refit_ytrain)
 
     def run_optuna(self, n_trials: int = 100):
@@ -59,25 +65,16 @@ class LogisticRegressionModel:
     def optuna_trial(self, trial):
         """One Optuna trial run"""
         params = {
-            "C": trial.suggest_loguniform("C", 1e-5, 100),
+            "model__C": trial.suggest_loguniform("model__C", 1e-5, 100),
+            "vectorizer__analyzer": trial.suggest_categorical(
+                "vectorizer__analyzer", ["char_wb", "word"]
+            ),
         }
 
-        prep_params = {
-            "analyzer": trial.suggest_categorical("analyzer", ["char_wb", "word"]),
-        }
+        params = self.add_ngram_range_tuple_to_params(trial, params)
 
-        if prep_params["analyzer"] == "word":
-            prep_params["ngram_range"] = trial.suggest_int("ngram_range", 1, 3)
-            prep_params["ngram_range"] = (1, prep_params["ngram_range"])
-
-        else:
-            prep_params["ngram_range"] = trial.suggest_int("ngram_range", 3, 6)
-            prep_params["ngram_range"] = (
-                prep_params["ngram_range"],
-                prep_params["ngram_range"],
-            )
-
-        pipe = self.get_pipeline(params, prep_params)
+        pipe = self.get_pipeline()
+        pipe.set_params(**params)  # set chosen hyperparameters
 
         score = cross_val_score(
             pipe,
@@ -88,28 +85,20 @@ class LogisticRegressionModel:
             n_jobs=5,
         )
         return score.mean()
-        # aucs = []
-        # for train_idx, val_idx in self.kfold.split(self.train_val_data):
-        #     # model definition
-        #     model = LogisticRegression(
-        #         **params, random_state=42, n_jobs=-1, max_iter=250
-        #     )
 
-        #     # data split definition
-        #     xtrain, xval = (
-        #         self.train_val_data.loc[train_idx, "text"],
-        #         self.train_val_data.loc[val_idx, "text"],
-        #     )
-        #     ytrain, yval = (
-        #         self.train_val_data.loc[train_idx, "label"],
-        #         self.train_val_data.loc[val_idx, "label"],
-        #     )
+    def add_ngram_range_tuple_to_params(self, trial, params):
+        if params["vectorizer__analyzer"] == "word":
+            params["vectorizer__ngram_range"] = trial.suggest_int(
+                "vectorizer__ngram_range", 1, 3
+            )
+            params["vectorizer__ngram_range"] = (1, params["vectorizer__ngram_range"])
 
-        #     # preprocessing
-        #     self.vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4))
-        #     xtrain = self.vectorizer.fit_transform(xtrain)
-        #     xval = self.vectorizer.transform(xval)
-
-        #     # fit & eval
-        #     model.fit(xtrain, ytrain)
-        #     aucs.append(roc_auc_score(yval, model.predict_proba(xval), multi_class="ovr"))
+        else:
+            params["vectorizer__ngram_range"] = trial.suggest_int(
+                "vectorizer__ngram_range", 3, 6
+            )
+            params["vectorizer__ngram_range"] = (
+                params["vectorizer__ngram_range"],
+                params["vectorizer__ngram_range"],
+            )
+        return params

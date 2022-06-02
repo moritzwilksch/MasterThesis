@@ -46,13 +46,16 @@ df = pl.from_dicts(
 prepper = Preprocessor()
 df = prepper.process(df)
 
+
+# df = df.with_column(
+#     pl.when(pl.col("label") == "0")
+#     .then(pl.lit("2"))
+#     .otherwise(pl.col("label"))
+#     .alias("label")
+# )
+
 df = df.filter(pl.col("label") != "2")
-df = df.with_column(
-    pl.when(pl.col("label") == "0")
-    .then(pl.lit("2"))
-    .otherwise(pl.col("label"))
-    .alias("label")
-)
+
 df = df.to_pandas()
 
 
@@ -87,9 +90,10 @@ df = df.to_pandas()
 
 # plot_top_bottom(shap_values, 0, 20)
 
+from sklearn.model_selection import train_test_split
+
 #%%
 from src.modeling.models import LogisticRegressionModel
-from sklearn.model_selection import train_test_split
 
 #%%
 lrm = LogisticRegressionModel(df)
@@ -103,3 +107,52 @@ lrm.refit_best_model(xtrain, ytrain)
 #%%
 print(classification_report(yval, lrm.model.predict(xval)))
 print(confusion_matrix(yval, lrm.model.predict(xval)))
+
+
+#%%
+probas = lrm.model.predict_proba(xval)
+
+#%%
+def entropy(p):
+    return (-p * np.log2(p)).sum(axis=1)
+
+
+entropies = entropy(probas)
+
+#%%
+most_uncertain = np.argsort(entropies)[-10:]
+for r, l in zip(xval.iloc[most_uncertain].values, yval.iloc[most_uncertain]):
+    print(f"[{l}] {r}")
+    print("-" * 80)
+
+#%%
+unlabeled = pl.from_dicts(
+    list(
+        DB.thesis.labeled_tweets.find(
+            {"label": ""},
+            projection={"text": True, "label": True, "_id": False, "id": True},
+        )
+    )
+)
+
+#%%
+probas = lrm.model.predict_proba(unlabeled.to_pandas()["text"])
+
+
+def entropy(p):
+    return (-p * np.log2(p)).sum(axis=1)
+
+
+entropies = entropy(probas)
+
+#%%
+# most_uncertain = np.argsort(entropies)[:10]
+most_uncertain = np.where((probas.max(axis=1) < 0.3))[0]
+most_certain = np.where((probas > 0.9).any(axis=1))[0]
+for r, l in zip(unlabeled[most_certain, "text"].to_numpy(), probas[most_certain].argmax(axis=1)):
+    print(f"[.{l}.] {r}")
+    print("-" * 80)
+
+#%%
+unlabeled[most_certain, "id"].to_series().to_list()
+
