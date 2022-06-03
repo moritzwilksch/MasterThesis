@@ -10,12 +10,8 @@ from matplotlib import projections
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    roc_auc_score,
-)
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix, roc_auc_score)
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.svm import SVC
@@ -147,12 +143,13 @@ entropies = entropy(probas)
 
 #%%
 # most_uncertain = np.argsort(entropies)[:10]
-most_uncertain = np.where((probas.max(axis=1) < 0.3))[0]
-most_certain = np.where((probas > 0.9).any(axis=1))[0]
-for r, l in zip(unlabeled[most_certain, "text"].to_numpy(), probas[most_certain].argmax(axis=1)):
+# most_uncertain = np.where((probas.max(axis=1) < 0.4))[0]
+most_certain = np.where((probas[:, 0] > 0.4))[0]
+for r, l in zip(
+    unlabeled[most_certain, "text"].to_numpy(), probas[most_certain].argmax(axis=1)
+):
     print(f"[.{l}.] {r}")
     print("-" * 80)
 
 #%%
 unlabeled[most_certain, "id"].to_series().to_list()
-
