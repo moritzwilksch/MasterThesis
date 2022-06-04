@@ -92,8 +92,8 @@ from sklearn.model_selection import train_test_split
 from src.modeling.models import LogisticRegressionModel
 
 #%%
-lrm = LogisticRegressionModel(df)
-lrm.run_optuna()
+lrm = LogisticRegressionModel(0, df)
+# lrm.run_optuna()
 
 
 #%%
@@ -143,13 +143,13 @@ entropies = entropy(probas)
 
 #%%
 # most_uncertain = np.argsort(entropies)[:10]
-# most_uncertain = np.where((probas.max(axis=1) < 0.4))[0]
-most_certain = np.where((probas[:, 0] > 0.4))[0]
+indeces = np.where((probas.max(axis=1) < 0.4))[0]
+# most_certain = np.where((probas[:, 0] > 0.4))[0]
 for r, l in zip(
-    unlabeled[most_certain, "text"].to_numpy(), probas[most_certain].argmax(axis=1)
+    unlabeled[indeces, "text"].to_numpy(), probas[indeces].argmax(axis=1)
 ):
     print(f"[.{l}.] {r}")
     print("-" * 80)
 
 #%%
-unlabeled[most_certain, "id"].to_series().to_list()
+unlabeled[indeces, "id"].to_series().to_list()
