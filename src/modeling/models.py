@@ -112,14 +112,10 @@ class LogisticRegressionModel(BaseSklearnSAModel):
         "model__C": 2.876441764742534,
         "vectorizer__analyzer": "char_wb",
         "vectorizer__ngram_range": (4, 4),
+        "vectorizer__min_df": 7.088819104525315e-05,
     }
 
     def __init__(self, split_idx, train_val_data):
-        # self.study = optuna.delete_study(
-        #     storage="sqlite:///tuning/optuna.db",
-        #     study_name="LogisticRegression",
-        # )
-
         super().__init__(
             "LogisticRegression", split_idx=split_idx, train_val_data=train_val_data
         )
@@ -146,6 +142,9 @@ class LogisticRegressionModel(BaseSklearnSAModel):
             "model__C": trial.suggest_loguniform("model__C", 1e-5, 100),
             "vectorizer__analyzer": trial.suggest_categorical(
                 "vectorizer__analyzer", ["char_wb", "word"]
+            ),
+            "vectorizer__min_df": trial.suggest_float(
+                "vectorizer__min_df", 1e-6, 1, log=True
             ),
         }
 

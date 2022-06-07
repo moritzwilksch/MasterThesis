@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
 import pandas as pd
 from rich.prompt import Prompt
+from scipy.special import softmax
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TFAutoModelForSequenceClassification,
+)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.modeling.models import BaseSklearnSAModel, LogisticRegressionModel
@@ -27,7 +34,7 @@ class Experiment:
         self.data = all_data
         self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
 
-    def run(self) -> None:
+    def run(self, n_trials: int = 100) -> None:
         """Runs the hyperparameter search for each outer split. Holds out test data."""
         answer = Prompt.ask(
             "Do you really want to re-run the entire hyperparameter sweep?",
@@ -45,7 +52,7 @@ class Experiment:
 
             sa_model = self.model(split_idx=split_idx, train_val_data=train_val_data)
 
-            sa_model.run_optuna(n_trials=10)
+            sa_model.run_optuna(n_trials=n_trials)
 
     def load(self) -> tuple[list, list, list]:
         """Loads and refits best model for each split and evaluates it on outer test data
@@ -114,12 +121,55 @@ class VaderBenchmark(OffTheShelfModelBenchmark):
         self.analyzer = SentimentIntensityAnalyzer()
 
     def load(self) -> list:
-        all_scores = []
+        test_scores = []
         for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
             test_data = self.data.iloc[test_idx]
             texts = test_data["text"].to_list()
 
             preds = []
             for tt in texts:
-                pred = self.analyzer.polarity_scores(test_data)
-                preds.append((pred["neu"], pred["pos"], pred["neg"]))
+                pred = self.analyzer.polarity_scores(tt)
+                probas = (pred["pos"], pred["neu"], pred["neg"])
+                if probas[0] == probas[1] == probas[2] == 0:
+                    probas = (0, 1, 0)  # no signal = neutral
+                preds.append(probas)
+
+            # prevent some float issues where the sum of probas is 0.9999 or 1.0001
+            preds = np.array(preds)
+            preds = preds / preds.sum(axis=1, keepdims=True)
+
+            test_scores.append(
+                roc_auc_score(test_data["label"], preds, multi_class="ovr")
+            )
+
+        return test_scores
+
+
+class FinBERTBenchmark(OffTheShelfModelBenchmark):
+    def __init__(self, all_data: pd.DataFrame):
+        super().__init__(all_data)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
+        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
+        )
+        self.model.eval()
+
+    def load(self) -> list:
+        test_scores = []
+        for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+            test_data = self.data.iloc[test_idx]
+            texts = test_data["text"].to_list()
+
+            tokens = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).get(
+                "input_ids"
+            )
+            output = self.model(tokens).logits.detach().numpy()
+            scores = softmax(output, axis=1)
+
+            test_scores.append(
+                roc_auc_score(test_data["label"], scores[:, [2, 1, 0]], multi_class="ovr")
+            )
+
+        return test_scores
