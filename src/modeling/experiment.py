@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -63,7 +64,7 @@ class Experiment:
         val_scores = []
         test_scores = []
         best_params = []
-
+        times_taken = []
         for split_idx, (train_idx, test_idx) in enumerate(self.kfold.split(self.data)):
             print(f"Re-fitting trial #{split_idx}...")
             train_val_data = self.data.iloc[train_idx]
@@ -74,12 +75,16 @@ class Experiment:
             best_params.append(sa_model.study.best_params)
             val_scores.append(sa_model.study.best_value)
             sa_model.refit_best_model(train_val_data["text"], train_val_data["label"])
+            
+            tic = time.perf_counter()
             preds = sa_model.model.predict_proba(test_data["text"])
+            tac = time.perf_counter()
+            times_taken.append(tac - tic)
             test_scores.append(
                 roc_auc_score(test_data["label"], preds, multi_class="ovr")
             )
 
-        return val_scores, test_scores, best_params
+        return val_scores, test_scores, best_params, times_taken
 
     def fit_final_best_model(self, all_data: pd.DataFrame):
         """Fits the final best model to all data.
@@ -122,11 +127,13 @@ class VaderBenchmark(OffTheShelfModelBenchmark):
 
     def load(self) -> list:
         test_scores = []
+        times_taken = []
         for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
             test_data = self.data.iloc[test_idx]
             texts = test_data["text"].to_list()
 
             preds = []
+            tic = time.perf_counter()
             for tt in texts:
                 pred = self.analyzer.polarity_scores(tt)
                 probas = (pred["pos"], pred["neu"], pred["neg"])
@@ -137,39 +144,104 @@ class VaderBenchmark(OffTheShelfModelBenchmark):
             # prevent some float issues where the sum of probas is 0.9999 or 1.0001
             preds = np.array(preds)
             preds = preds / preds.sum(axis=1, keepdims=True)
+            tac = time.perf_counter()
 
+            times_taken.append(tac - tic)
             test_scores.append(
                 roc_auc_score(test_data["label"], preds, multi_class="ovr")
             )
 
-        return test_scores
+        return test_scores, times_taken
 
 
 class FinBERTBenchmark(OffTheShelfModelBenchmark):
     def __init__(self, all_data: pd.DataFrame):
         super().__init__(all_data)
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained("ProsusAI/finbert")
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            "ahmedrachid/FinancialBERT-Sentiment-Analysis"
+            "ProsusAI/finbert"
         )
         self.model.eval()
 
     def load(self) -> list:
         test_scores = []
-        for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+        times_taken = []
+        for split_idx, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+            print(f"At split #{split_idx}")
+            print(f"{test_scores = }")
             test_data = self.data.iloc[test_idx]
             texts = test_data["text"].to_list()
 
-            tokens = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True).get(
-                "input_ids"
+            BATCHSIZE = (
+                512  # we need to batch inference, runs OOM at CPU inference w/ 64GB RAM
             )
-            output = self.model(tokens).logits.detach().numpy()
-            scores = softmax(output, axis=1)
+            batched_scores = []
+            tic = time.perf_counter()
+            for idx in range(0, len(texts), BATCHSIZE):
+                print(f"{idx = }")
+                tokens = self.tokenizer(
+                    texts[idx : idx + BATCHSIZE],
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                )
+                output = self.model(**tokens).logits.detach().numpy()
+                scores = softmax(output, axis=1)
+                batched_scores.append(scores)
+
+            scores = np.vstack(batched_scores)
+            tac = time.perf_counter()
+            times_taken.append(tac - tic)
+
+            test_scores.append(
+                roc_auc_score(test_data["label"], scores[:, [0, 2, 1]], multi_class="ovr")
+            )
+
+        return test_scores, times_taken
+
+
+class TwitterRoBERTaBenchmark(OffTheShelfModelBenchmark):
+    def __init__(self, all_data: pd.DataFrame):
+        super().__init__(all_data)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "cardiffnlp/twitter-roberta-base-sentiment-latest"
+        )
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            "cardiffnlp/twitter-roberta-base-sentiment-latest"
+        )
+        self.model.eval()
+
+    def load(self) -> list:
+        test_scores = []
+        times_taken = []
+        for split_idx, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+            print(f"At split #{split_idx}")
+            print(f"{test_scores = }")
+            test_data = self.data.iloc[test_idx]
+            texts = test_data["text"].to_list()
+
+            BATCHSIZE = (
+                512  # we need to batch inference, runs OOM at CPU inference w/ 64GB RAM
+            )
+            batched_scores = []
+            tic = time.perf_counter()
+            for idx in range(0, len(texts), BATCHSIZE):
+                print(f"{idx = }")
+                tokens = self.tokenizer(
+                    texts[idx : idx + BATCHSIZE],
+                    return_tensors="pt",
+                    padding=True,
+                )  # this is a dict w/ attention masks, not only tokens!
+                output = self.model(**tokens).logits.detach().numpy()
+                scores = softmax(output, axis=1)
+                batched_scores.append(scores)
+
+            scores = np.vstack(batched_scores)
+            tac = time.perf_counter()
+            times_taken.append(tac - tic)
 
             test_scores.append(
                 roc_auc_score(test_data["label"], scores[:, [2, 1, 0]], multi_class="ovr")
             )
 
-        return test_scores
+        return test_scores, times_taken

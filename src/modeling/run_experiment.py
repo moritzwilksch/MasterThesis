@@ -3,7 +3,7 @@ import numpy as np
 import polars as pl
 
 from src.modeling.experiment import (Experiment, FinBERTBenchmark,
-                                     VaderBenchmark)
+                                     TwitterRoBERTaBenchmark, VaderBenchmark)
 from src.modeling.models import LogisticRegressionModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
@@ -37,18 +37,32 @@ df = df.with_column(
 df = df.to_pandas()
 
 #%%
-experiment01 = Experiment("LogisticRegression", LogisticRegressionModel, df)
-# experiment01.run(n_trials=100)
-# val_scores, test_scores, best_params = experiment01.load()
+# experiment01 = Experiment("LogisticRegression", LogisticRegressionModel, df)
+# # experiment01.run(n_trials=100)
+# val_scores, test_scores, best_params, times_taken = experiment01.load()
+# print(test_scores)
+# print(times_taken)
 
 #%%
 
-vaderbenchmark = VaderBenchmark(df)
-test_scores = vaderbenchmark.load()
+# vaderbenchmark = VaderBenchmark(df)
+# test_scores, times_taken = vaderbenchmark.load()
+# print(test_scores)
+# print(times_taken)
 
 #%%
 finbertbenchmark = FinBERTBenchmark(df)
-test_scores = finbertbenchmark.load()
+test_scores, times_taken = finbertbenchmark.load()
+print(test_scores)
+print(times_taken)
+
+#%%
+# twitter_roberta_benchmark = TwitterRoBERTaBenchmark(df)
+# test_scores, times_taken = twitter_roberta_benchmark.load()
+# print(test_scores)
+# print(times_taken)
+
+
 #%%
 # print(val_scores)
 # print(test_scores)

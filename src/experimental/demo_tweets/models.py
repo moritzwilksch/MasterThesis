@@ -75,8 +75,8 @@ class FinBERT(ModelWrapper):
 
     def predict(self, text: str) -> str:
 
-        tokens = self.tokenizer(text, return_tensors="pt").get("input_ids")
-        output = self.model(tokens).logits.detach().numpy()[0]
+        tokens = self.tokenizer(text, return_tensors="pt")
+        output = self.model(**tokens).logits.detach().numpy()[0]
         scores = softmax(output)
         sentiment = dict(zip(["pos", "neg", "neu"], scores))
         return self.prettify(sentiment)
@@ -85,7 +85,7 @@ class FinBERT(ModelWrapper):
 # -----------------------------------------------------------------------------
 
 
-class FinancialBERT(ModelWrapper):
+class FinancialBERT(ModelWrapper):  # is this a knock-off model?
     def __init__(self) -> None:
         super().__init__()
         self.tokenizer = AutoTokenizer.from_pretrained(
