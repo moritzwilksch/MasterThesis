@@ -107,6 +107,13 @@ class BaseSklearnSAModel(ABC):
 
 
 class LogisticRegressionModel(BaseSklearnSAModel):
+    # this is the final model based on nested CV
+    FINAL_BEST_PARAMS = {
+        "model__C": 2.876441764742534,
+        "vectorizer__analyzer": "char_wb",
+        "vectorizer__ngram_range": (4, 4),
+    }
+
     def __init__(self, split_idx, train_val_data):
         # self.study = optuna.delete_study(
         #     storage="sqlite:///tuning/optuna.db",

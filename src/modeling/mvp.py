@@ -145,9 +145,7 @@ entropies = entropy(probas)
 # most_uncertain = np.argsort(entropies)[:10]
 indeces = np.where((probas.max(axis=1) < 0.4))[0]
 # most_certain = np.where((probas[:, 0] > 0.4))[0]
-for r, l in zip(
-    unlabeled[indeces, "text"].to_numpy(), probas[indeces].argmax(axis=1)
-):
+for r, l in zip(unlabeled[indeces, "text"].to_numpy(), probas[indeces].argmax(axis=1)):
     print(f"[.{l}.] {r}")
     print("-" * 80)
 

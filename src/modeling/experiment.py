@@ -1,7 +1,10 @@
+from abc import ABC, abstractmethod
+
 import pandas as pd
 from rich.prompt import Prompt
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.modeling.models import BaseSklearnSAModel, LogisticRegressionModel
 
@@ -70,3 +73,53 @@ class Experiment:
             )
 
         return val_scores, test_scores, best_params
+
+    def fit_final_best_model(self, all_data: pd.DataFrame):
+        """Fits the final best model to all data.
+
+        Args:
+            all_data (pd.DataFrame): data frame of all data
+        """
+        model = self.model(split_idx=None, train_val_data=None).get_pipeline()
+        model.set_params(**self.model.FINAL_BEST_PARAMS)
+        model.fit(all_data["text"], all_data["label"])
+        return model
+
+
+class OffTheShelfModelBenchmark(ABC):
+    """A benchmark of the off the shelf models."""
+
+    def __init__(self, all_data: pd.DataFrame):
+        """Init.
+
+        Args:
+            all_data (pd.DataFrame): data frame of train and val data for inner CV
+        """
+        self.data = all_data
+        self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    @abstractmethod
+    def load(self) -> list:
+        """Loads out-of-sample test scores for all 5 splits for this model.
+
+        Returns:
+            list: out-of-sample test scores for all 5 splits
+        """
+        pass
+
+
+class VaderBenchmark(OffTheShelfModelBenchmark):
+    def __init__(self, all_data: pd.DataFrame):
+        super().__init__(all_data)
+        self.analyzer = SentimentIntensityAnalyzer()
+
+    def load(self) -> list:
+        all_scores = []
+        for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+            test_data = self.data.iloc[test_idx]
+            texts = test_data["text"].to_list()
+
+            preds = []
+            for tt in texts:
+                pred = self.analyzer.polarity_scores(test_data)
+                preds.append((pred["neu"], pred["pos"], pred["neg"]))
