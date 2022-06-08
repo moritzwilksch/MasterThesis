@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.pipeline import Pipeline
-
+from sklearn.svm import SVC
 
 class BaseSklearnSAModel(ABC):
     """
@@ -140,6 +140,61 @@ class LogisticRegressionModel(BaseSklearnSAModel):
         """Overrides BaseSklearnSAModel.optuna_trial()"""
         params = {
             "model__C": trial.suggest_loguniform("model__C", 1e-5, 100),
+            "vectorizer__analyzer": trial.suggest_categorical(
+                "vectorizer__analyzer", ["char_wb", "word"]
+            ),
+            "vectorizer__min_df": trial.suggest_float(
+                "vectorizer__min_df", 1e-6, 1, log=True
+            ),
+        }
+
+        params = self.add_ngram_range_tuple_to_params(trial, params)
+
+        pipe = self.get_pipeline()
+        pipe.set_params(**params)  # set chosen hyperparameters
+
+        score = cross_val_score(
+            pipe,
+            X=self.train_val_data["text"],
+            y=self.train_val_data["label"],
+            cv=self.kfold,
+            scoring=make_scorer(roc_auc_score, needs_proba=True, multi_class="ovr"),
+            n_jobs=5,
+        )
+        return score.mean()
+
+
+class SVMModel(BaseSklearnSAModel):
+    # this is the final model based on nested CV
+    FINAL_BEST_PARAMS = {}
+
+    def __init__(self, split_idx, train_val_data):
+        super().__init__(
+            "SVM", split_idx=split_idx, train_val_data=train_val_data
+        )
+
+    def get_pipeline(self):
+        """Overrides BaseSklearnSAModel.get_pipeline()"""
+
+        return Pipeline(
+            [
+                (
+                    "vectorizer",
+                    TfidfVectorizer(),  # params will be set later
+                ),
+                (
+                    "model",
+                    SVC(random_state=42, probability=True),
+                ),
+            ]
+        )
+
+    def optuna_trial(self, trial):
+        """Overrides BaseSklearnSAModel.optuna_trial()"""
+        params = {
+            "model__C": trial.suggest_loguniform("model__C", 1e-5, 100),
+            "model__kernel": trial.suggest_categorical("model__kernel", ["linear", "poly", "rbf", "sigmoid"]),
+            "model__degree": trial.suggest_int("model__degree", 1, 6),
             "vectorizer__analyzer": trial.suggest_categorical(
                 "vectorizer__analyzer", ["char_wb", "word"]
             ),

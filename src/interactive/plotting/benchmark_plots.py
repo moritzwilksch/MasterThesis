@@ -46,10 +46,11 @@ ax.plot(
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
 ax.set_ylim(0.49, 0.85)
 ax.set_xlim(-0.25, 4.25)
-ax.set_xlabel(None)
-ax.set_ylabel("Out-of-sample ROC AUC", labelpad=15)
+ax.set_xlabel("Model", weight="bold", labelpad=15)
+ax.set_ylabel("Out-of-sample ROC AUC", labelpad=15, weight="bold")
 
 ax.tick_params(axis="x", length=0)
+# ax.set_xticklabels(ax.get_xticklabels(), weight="bold")
 sns.despine(bottom=True)
 plt.tight_layout()
 
@@ -80,8 +81,8 @@ ax.plot(
 
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
 
-ax.set_xlabel(None)
-ax.set_ylabel("Inference time per sample (ms)", labelpad=15)
+ax.set_xlabel("Model", labelpad=15, weight="bold")
+ax.set_ylabel("Inference time per sample (ms)", labelpad=15, weight="bold")
 ax.set_yscale("log")
 ax.yaxis.set_major_formatter(lambda x, pos: f"{x:.1f}")
 ax.tick_params(axis="x", length=0)

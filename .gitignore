@@ -8,6 +8,7 @@ fin-SoMe.json
 finsome.csv
 data/NTUSD-Fin
 outputs/models/*
+*.bak
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
