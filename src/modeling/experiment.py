@@ -245,3 +245,7 @@ class TwitterRoBERTaBenchmark(OffTheShelfModelBenchmark):
             )
 
         return test_scores, times_taken
+
+
+class FinSoMeBenchmark(OffTheShelfModelBenchmark):
+    
