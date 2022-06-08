@@ -12,7 +12,7 @@ from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
                           TFAutoModelForSequenceClassification)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
-from src.modeling.models import BaseSklearnSAModel, LogisticRegressionModel
+from src.ml_modeling.models import BaseSklearnSAModel, LogisticRegressionModel
 
 
 class Experiment:

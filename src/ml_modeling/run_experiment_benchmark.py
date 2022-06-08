@@ -6,10 +6,10 @@ import pandas as pd
 import polars as pl
 from black import Mode
 
-from src.modeling.experiment import (Experiment, FinBERTBenchmark,
+from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
                                      NTUSDMeBenchmark, TwitterRoBERTaBenchmark,
                                      VaderBenchmark)
-from src.modeling.models import LogisticRegressionModel
+from src.ml_modeling.models import LogisticRegressionModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
 

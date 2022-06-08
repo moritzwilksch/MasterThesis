@@ -4,10 +4,10 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 import polars as pl
-from src.modeling.models import SVMModel
+from src.ml_modeling.models import SVMModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
-from src.modeling.experiment import Experiment
+from src.ml_modeling.experiment import Experiment
 
 DB = get_client()
 

@@ -89,7 +89,7 @@ df = df.to_pandas()
 from sklearn.model_selection import train_test_split
 
 #%%
-from src.modeling.models import LogisticRegressionModel
+from src.ml_modeling.models import LogisticRegressionModel
 
 #%%
 lrm = LogisticRegressionModel(0, df)
