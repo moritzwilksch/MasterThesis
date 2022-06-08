@@ -5,9 +5,9 @@ backup.gz
 labeled_tweets_backup.gz
 tuning/*
 fin-SoMe.json
-
-
-
+finsome.csv
+data/NTUSD-Fin
+outputs/models/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

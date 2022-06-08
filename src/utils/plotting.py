@@ -7,7 +7,11 @@ import seaborn as sns
 
 
 class Colors(Enum):
-    UPBLUE = "#00305e"
+    DARKBLUE = "#00305E"
+    LIGHTBLUE = "#2589BD"
+    GREEN = "#679436"
+    YELLOW = "#F5B700"
+    RED = "#E84855"
 
 
 def scale_lightness(rgb, scale_l):

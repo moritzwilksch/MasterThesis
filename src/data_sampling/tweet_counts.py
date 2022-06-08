@@ -100,10 +100,10 @@ class Plots(ABC):
                         pl.col("ticker").is_in(excluded),
                         pl.lit(
                             scale_lightness(
-                                sns.desaturate(Colors.UPBLUE.value, 0.1), 4.1
+                                sns.desaturate(Colors.DARKBLUE.value, 0.1), 4.1
                             )
                         ),
-                        pl.lit(Colors.UPBLUE.value),
+                        pl.lit(Colors.DARKBLUE.value),
                     ).alias("color"),
                 ]
             )
@@ -121,7 +121,7 @@ class Plots(ABC):
             color=plotdf_top20["color"],
             linestyle="--",
             linewidth=plotdf_top20["linewidth"],
-            ec=Colors.UPBLUE.value,
+            ec=Colors.DARKBLUE.value,
             zorder=10,
         )
 

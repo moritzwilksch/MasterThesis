@@ -1,17 +1,15 @@
 import time
 from abc import ABC, abstractmethod
 
+import joblib
 import numpy as np
 import pandas as pd
 from rich.prompt import Prompt
 from scipy.special import softmax
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    TFAutoModelForSequenceClassification,
-)
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          TFAutoModelForSequenceClassification)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.modeling.models import BaseSklearnSAModel, LogisticRegressionModel
@@ -75,7 +73,7 @@ class Experiment:
             best_params.append(sa_model.study.best_params)
             val_scores.append(sa_model.study.best_value)
             sa_model.refit_best_model(train_val_data["text"], train_val_data["label"])
-            
+
             tic = time.perf_counter()
             preds = sa_model.model.predict_proba(test_data["text"])
             tac = time.perf_counter()
@@ -86,6 +84,17 @@ class Experiment:
 
         return val_scores, test_scores, best_params, times_taken
 
+    def apply_to_other_data(self, other_data: pd.DataFrame):
+        """Applies the final best model to other data.
+
+        Args:
+            other_data (pd.DataFrame): data frame of other data, needs columns "text" and "label" where 1=pos, 2=neu, 3=neg
+        """
+
+        model = joblib.load(f"outputs/models/final_{self.model.__name__}.gz")
+        preds = model.predict_proba(other_data["text"])
+        return roc_auc_score(other_data["label"], preds, multi_class="ovr")
+
     def fit_final_best_model(self, all_data: pd.DataFrame):
         """Fits the final best model to all data.
 
@@ -95,6 +104,8 @@ class Experiment:
         model = self.model(split_idx=None, train_val_data=None).get_pipeline()
         model.set_params(**self.model.FINAL_BEST_PARAMS)
         model.fit(all_data["text"], all_data["label"])
+        joblib.dump(model, f"outputs/models/final_{self.model.__name__}.gz")
+        print("Saved final best model.")
         return model
 
 
@@ -194,7 +205,9 @@ class FinBERTBenchmark(OffTheShelfModelBenchmark):
             times_taken.append(tac - tic)
 
             test_scores.append(
-                roc_auc_score(test_data["label"], scores[:, [0, 2, 1]], multi_class="ovr")
+                roc_auc_score(
+                    test_data["label"], scores[:, [0, 2, 1]], multi_class="ovr"
+                )
             )
 
         return test_scores, times_taken
@@ -241,11 +254,75 @@ class TwitterRoBERTaBenchmark(OffTheShelfModelBenchmark):
             times_taken.append(tac - tic)
 
             test_scores.append(
-                roc_auc_score(test_data["label"], scores[:, [2, 1, 0]], multi_class="ovr")
+                roc_auc_score(
+                    test_data["label"], scores[:, [2, 1, 0]], multi_class="ovr"
+                )
             )
 
         return test_scores, times_taken
 
 
-class FinSoMeBenchmark(OffTheShelfModelBenchmark):
-    
+class NTUSDMeBenchmark(OffTheShelfModelBenchmark):
+    def __init__(self, all_data: pd.DataFrame, path_to_ntusd_folder: str):
+        super().__init__(all_data)
+        dfs = [
+            pd.read_json(f"{path_to_ntusd_folder}/{f}")[["token", "market_sentiment"]]
+            for f in [
+                "words.json",
+                "NTUSD_Fin_emoji_v1.0.json",
+                "NTUSD_Fin_hashtag_v1.0.json",
+            ]
+        ]
+        self.ntusd = pd.concat(dfs).reset_index(drop=True)
+        self.ntusd = {
+            k: v for k, v in [r.values() for r in self.ntusd.to_dict(orient="records")]
+        }  # dict: token -> sentiment
+
+    def predict_one(self, text: str) -> float:
+        # text_sentiment = 0.0
+        text_sentiment = {"pos": 0.0, "neu": 0.0, "neg": 0.0}
+
+        for token, token_sentiment in self.ntusd.items():
+            if token in text:
+                if token_sentiment > 0.0:
+                    text_sentiment["pos"] += np.abs(token_sentiment)
+                elif token_sentiment < 0.0:
+                    text_sentiment["neg"] += np.abs(token_sentiment)
+                else:
+                    text_sentiment["neu"] += np.abs(token_sentiment)
+
+        # normalize to resemble probas
+        factor = sum(text_sentiment.values())
+        if factor == 0.0:
+            return {"pos": 0.0, "neu": 1.0, "neg": 0.0}
+        else:
+            return {k: v / factor for k, v in text_sentiment.items()}
+
+    def load(self):
+        test_scores = []
+        times_taken = []
+        for _, (_, test_idx) in enumerate(self.kfold.split(self.data)):
+            test_data = self.data.iloc[test_idx]
+            texts = test_data["text"].to_list()
+
+            preds = []
+            tic = time.perf_counter()
+            for tt in texts:
+                pred = self.predict_one(tt)
+                probas = (pred["pos"], pred["neu"], pred["neg"])
+                preds.append(probas)
+
+            # prevent some float issues where the sum of probas is 0.9999 or 1.0001
+            tac = time.perf_counter()
+            times_taken.append(tac - tic)
+
+            test_scores.append(
+                roc_auc_score(test_data["label"], preds, multi_class="ovr")
+            )
+
+        return test_scores, times_taken
+
+
+# if __name__ == "__main__":
+#     ntusd = NTUSDMeBenchmark(None, "data/NTUSD-Fin")
+#     print(ntusd.predict_one(""))
