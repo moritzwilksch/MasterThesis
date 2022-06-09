@@ -10,6 +10,7 @@ from sklearn.model_selection import KFold, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 
+
 class BaseSklearnSAModel(ABC):
     """
     Abstract base class for all sklearn-based SA models
@@ -166,12 +167,17 @@ class LogisticRegressionModel(BaseSklearnSAModel):
 
 class SVMModel(BaseSklearnSAModel):
     # this is the final model based on nested CV
-    FINAL_BEST_PARAMS = {}
+    FINAL_BEST_PARAMS = {
+        "model__C": 6.288296,
+        "model__degree": 5,
+        "model__kernel": "rbf",
+        "vectorizer__analyzer": "char_wb",
+        "vectorizer__min_df": 0.000024,
+        "vectorizer__ngram_range": (4, 4),
+    }
 
     def __init__(self, split_idx, train_val_data):
-        super().__init__(
-            "SVM", split_idx=split_idx, train_val_data=train_val_data
-        )
+        super().__init__("SVM", split_idx=split_idx, train_val_data=train_val_data)
 
     def get_pipeline(self):
         """Overrides BaseSklearnSAModel.get_pipeline()"""
@@ -193,7 +199,9 @@ class SVMModel(BaseSklearnSAModel):
         """Overrides BaseSklearnSAModel.optuna_trial()"""
         params = {
             "model__C": trial.suggest_loguniform("model__C", 1e-5, 100),
-            "model__kernel": trial.suggest_categorical("model__kernel", ["linear", "poly", "rbf", "sigmoid"]),
+            "model__kernel": trial.suggest_categorical(
+                "model__kernel", ["linear", "poly", "rbf", "sigmoid"]
+            ),
             "model__degree": trial.suggest_int("model__degree", 1, 6),
             "vectorizer__analyzer": trial.suggest_categorical(
                 "vectorizer__analyzer", ["char_wb", "word"]

@@ -1,7 +1,6 @@
 #%%
 from abc import ABC
 
-import pandas as pd
 import polars as pl
 from rich import print
 
@@ -18,8 +17,8 @@ df = pl.read_parquet(
 #%%
 def track_size(f: callable, *args, **kwargs) -> callable:
     def wrapper(cls, df: pl.DataFrame, *args, **kwargs):
-        print(f"Before {f.__name__}(...): n = {df.height:,}")
         result = f(cls, df)
+        print(f"After {f.__name__}(...): n = {result.height:,}")
         return result
 
     return wrapper

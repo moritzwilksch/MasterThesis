@@ -9,7 +9,7 @@ from black import Mode
 from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
                                      NTUSDMeBenchmark, TwitterRoBERTaBenchmark,
                                      VaderBenchmark)
-from src.ml_modeling.models import LogisticRegressionModel
+from src.ml_modeling.models import LogisticRegressionModel, SVMModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
 
@@ -64,6 +64,7 @@ class Dataset(Enum):
 
 class Model(Enum):
     LOGISTIC_REGRESSION = "logistic_regression"
+    SVM = "svm"
     VADER = "vader"
     FINBERT = "finbert"
     TWITTER_ROBERTA = "twitter_roberta"
@@ -72,7 +73,7 @@ class Model(Enum):
 
 ########################
 DATASET = Dataset.FINSOME
-MODEL = Model.LOGISTIC_REGRESSION
+MODEL = Model.SVM
 ########################
 
 if DATASET == Dataset.FINSOME:
@@ -83,13 +84,21 @@ else:
 print(f"Benchmark: {MODEL.value} on {DATASET.value}")
 
 if MODEL == Model.LOGISTIC_REGRESSION:
-    experiment01 = Experiment("LogisticRegression", LogisticRegressionModel, data)
+    experiment = Experiment("LogisticRegression", LogisticRegressionModel, data)
     if DATASET == DATASET.PYFIN_SENTI:
-        experiment01.fit_final_best_model(data)
-        # experiment01.run(n_trials=100)
-        val_scores, test_scores, best_params, times_taken = experiment01.load()
+        experiment.fit_final_best_model(data)
+        val_scores, test_scores, best_params, times_taken = experiment.load()
     else:
-        test_scores = experiment01.apply_to_other_data(finsome)
+        test_scores = experiment.apply_to_other_data(finsome)
+        times_taken = "N/A"
+
+if MODEL == Model.SVM:
+    experiment = Experiment("SVM", SVMModel, data)
+    if DATASET == DATASET.PYFIN_SENTI:
+        experiment.fit_final_best_model(data)
+        val_scores, test_scores, best_params, times_taken = experiment.load()
+    else:
+        test_scores = experiment.apply_to_other_data(finsome)
         times_taken = "N/A"
 
 if MODEL == Model.VADER:

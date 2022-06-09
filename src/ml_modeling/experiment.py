@@ -53,11 +53,11 @@ class Experiment:
 
             sa_model.run_optuna(n_trials=n_trials)
 
-    def load(self) -> tuple[list, list, list]:
+    def load(self) -> tuple[list, list, list, list]:
         """Loads and refits best model for each split and evaluates it on outer test data
 
         Returns:
-            tuple[list, list, list]: val_scores, test_scores, best_params
+            tuple[list, list, list]: val_scores, test_scores, best_params, times_taken
         """
         val_scores = []
         test_scores = []

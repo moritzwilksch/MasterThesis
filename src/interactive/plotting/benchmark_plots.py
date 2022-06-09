@@ -45,7 +45,7 @@ ax.plot(
 
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
 ax.set_ylim(0.49, 0.85)
-ax.set_xlim(-0.25, 4.25)
+ax.set_xlim(-0.25, 5.25)
 ax.set_xlabel("Model", weight="bold", labelpad=15)
 ax.set_ylabel("Out-of-sample ROC AUC", labelpad=15, weight="bold")
 
