@@ -2,6 +2,7 @@
 
 #%%
 import polars as pl
+
 from src.utils.db import get_client
 
 DB = get_client()
