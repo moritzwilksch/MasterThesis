@@ -56,8 +56,6 @@ class Preprocessor:
     def prep_multi_spaces(self, df: pl.DataFrame) -> pl.DataFrame:
         return df.with_column(pl.col(self.TEXTCOL).str.replace_all(r"\s+", " "))
 
-
-
     def process(self, df: pl.DataFrame) -> pl.DataFrame:
         if self.symbols:
             df = self.fix_symbols(df)
@@ -73,5 +71,5 @@ class Preprocessor:
             df = self.prep_newlines(df)
         if self.multi_spaces:
             df = self.prep_multi_spaces(df)
-            
+
         return df.filter((pl.col("text") != "") & (pl.col("text") != " "))

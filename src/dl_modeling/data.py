@@ -1,11 +1,12 @@
 import pandas as pd
+import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
 from sklearn.model_selection import KFold, train_test_split
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
-import polars as pl
+
 from src.utils.preprocessing import Preprocessor
 
 prepper = Preprocessor()
@@ -33,9 +34,7 @@ class TweetDataModule(ptl.LightningDataModule):
         self.split_idx = split_idx
         self.batch_size = batch_size
 
-        self.all_data = pl.read_parquet(
-            "data/labeled/labeled_tweets.parquet"
-        )
+        self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
         self.all_data = prepper.process(self.all_data).to_pandas()
 
         self.xtrainval, self.xtest, self.ytrainval, self.ytest = train_test_split(
@@ -133,4 +132,8 @@ if __name__ == "__main__":
     #     print(x, y)
     #     break
 
-    print(dm.tokenizer("$MU well I'm glad I stayed short on this piece of shiiiiit lol:D 😂😂 $10.23 incoming #savagetrading "))
+    print(
+        dm.tokenizer(
+            "$MU well I'm glad I stayed short on this piece of shiiiiit lol:D 😂😂 $10.23 incoming #savagetrading "
+        )
+    )
