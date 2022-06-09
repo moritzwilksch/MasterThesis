@@ -74,7 +74,7 @@ class Model(Enum):
 
 ########################
 DATASET = Dataset.FINSOME
-MODEL = Model.SVM
+MODEL = Model.LOGISTIC_REGRESSION
 ########################
 
 if DATASET == Dataset.FINSOME:

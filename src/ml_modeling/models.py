@@ -110,10 +110,10 @@ class BaseSklearnSAModel(ABC):
 class LogisticRegressionModel(BaseSklearnSAModel):
     # this is the final model based on nested CV
     FINAL_BEST_PARAMS = {
-        "model__C": 2.876441764742534,
+        "model__C": 1.3425051723565153,
         "vectorizer__analyzer": "char_wb",
+        "vectorizer__min_df": 0.00012376778865915285,
         "vectorizer__ngram_range": (4, 4),
-        "vectorizer__min_df": 7.088819104525315e-05,
     }
 
     def __init__(self, split_idx, train_val_data):
