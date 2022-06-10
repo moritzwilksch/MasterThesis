@@ -53,6 +53,7 @@ ax.tick_params(axis="x", length=0)
 # ax.set_xticklabels(ax.get_xticklabels(), weight="bold")
 sns.despine(bottom=True)
 plt.tight_layout()
+fig.savefig("outputs/plots/model_performance_pyfin.pdf", bbox_inches="tight", facecolor="white")
 
 #%%
 fig, ax = plt.subplots(figsize=(12, 5))
@@ -88,3 +89,4 @@ ax.yaxis.set_major_formatter(lambda x, pos: f"{x:.1f}")
 ax.tick_params(axis="x", length=0)
 sns.despine(bottom=True)
 plt.tight_layout()
+fig.savefig("outputs/plots/model_inference_time.pdf", bbox_inches="tight", facecolor="white")

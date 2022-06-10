@@ -27,6 +27,7 @@ df = pl.from_dicts(
 prepper = Preprocessor()
 df = prepper.process(df)
 
+#%%
 
 # TODO: should we merge labels? drop 2?
 df = df.with_column(
@@ -41,11 +42,11 @@ df = df.to_pandas()
 
 #%%
 experiment = Experiment("SVMModel", SVMModel, df)
-experiment.run(n_trials=100)
+# experiment.run(n_trials=100)
 
 
 # experiment = Experiment("LogisticRegressionNew", LogisticRegressionModel, df)
 # # experiment.run(n_trials=100)
 
 #%%
-# val_scores, test_scores, best_params, times_taken = experiment.load()
+val_scores, test_scores, best_params, times_taken = experiment.load()
