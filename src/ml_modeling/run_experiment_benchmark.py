@@ -73,8 +73,8 @@ class Model(Enum):
 
 
 ########################
-DATASET = Dataset.FINSOME
-MODEL = Model.LOGISTIC_REGRESSION
+DATASET = Dataset.PYFIN_SENTI
+MODEL = Model.SVM
 ########################
 
 if DATASET == Dataset.FINSOME:

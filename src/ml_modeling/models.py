@@ -168,11 +168,11 @@ class LogisticRegressionModel(BaseSklearnSAModel):
 class SVMModel(BaseSklearnSAModel):
     # this is the final model based on nested CV
     FINAL_BEST_PARAMS = {
-        "model__C": 6.288296,
-        "model__degree": 5,
+        "model__C": 1.5973104552828767,
+        "model__degree": 3,
         "model__kernel": "rbf",
         "vectorizer__analyzer": "char_wb",
-        "vectorizer__min_df": 0.000024,
+        "vectorizer__min_df": 2.8650553721029808e-05,
         "vectorizer__ngram_range": (4, 4),
     }
 
