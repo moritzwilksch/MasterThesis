@@ -17,3 +17,6 @@ dashboard:
 
 backup:
 	python src/scripts/upload_backup.py
+
+tensorboard:
+	tensorboard --logdir lightning_logs/recurrent

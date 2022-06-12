@@ -73,7 +73,7 @@ class Model(Enum):
 
 
 ########################
-DATASET = Dataset.PYFIN_SENTI
+DATASET = Dataset.FINSOME
 MODEL = Model.SVM
 ########################
 
