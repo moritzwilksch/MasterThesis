@@ -1,12 +1,13 @@
 from unicodedata import bidirectional
+
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
+from pytorch_lightning.loggers import TensorBoardLogger
 
 from src.dl_modeling.data import TweetDataModule
-from pytorch_lightning.loggers import TensorBoardLogger
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 
@@ -82,7 +83,9 @@ model = RecurrentSAModel(
     hidden_dim=32,
 )
 trainer = ptl.Trainer(
-    logger=tb_logger, max_epochs=15, log_every_n_steps=50,
+    logger=tb_logger,
+    max_epochs=15,
+    log_every_n_steps=50,
 )
 trainer.fit(
     model,
