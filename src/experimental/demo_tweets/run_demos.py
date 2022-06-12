@@ -5,12 +5,10 @@ from rich.console import Console
 from rich.panel import Panel
 
 from src.experimental.demo_tweets.models import (FinancialBERT, FinBERT,
-                                                 ModelWrapper, TwitterRoberta,
-                                                 Vader)
-from src.utils.db_logging import logger
+                                                 ModelWrapper, PyFinLogReg,
+                                                 TwitterRoberta, Vader)
 from src.utils.storage import bucket
 
-logger.info("Starting demo run")
 c = Console(record=True)
 c.clear()
 
@@ -19,7 +17,8 @@ class Experiment:
     def __init__(self, models: list[ModelWrapper], examples_filename: str):
         self.models = models
 
-        self.examples = toml.load("data/examples/examples.toml")
+        # self.examples = toml.load("data/examples/examples.toml")
+        self.examples = toml.load(examples_filename)
 
     def run(self, manual_input: str = None) -> None:
         if manual_input is not None:
@@ -42,8 +41,9 @@ class Experiment:
 
 
 experiment = Experiment(
-    models=[TwitterRoberta(), FinBERT(), FinancialBERT(), Vader()],
-    examples_filename="data/examples/examples.yaml",
+    models=[TwitterRoberta(), FinBERT(), Vader(), PyFinLogReg()],
+    # models=[Vader()],
+    examples_filename="data/examples/demo_pieces.toml",
 )
 experiment.run()
 
@@ -55,4 +55,4 @@ with io.BytesIO() as f:
 # with open("outputs/examples/examples.txt", "w") as f:
 #     f.writelines(c.export_text())
 
-logger.info("Ended demo run")
+# logger.info("Ended demo run")

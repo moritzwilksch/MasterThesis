@@ -1,0 +1,27 @@
+stock_ownership = [
+    "adding to my $AAPL position",
+    "getting rid of to my $AAPL position",
+    "I'm long $AAPL",
+    "Just shorted $AAPL",
+    "Sold my $AAPL for a nice 50% profit"
+]
+
+options_trading = [
+    "Going all in $TSLA 4/20 $69 puts today before close",
+    "Going all in $TSLA 4/20 $69 calls today before close",
+    "Sold a 58P on $INTC two weeks out",
+    "Sold a 58C on $INTC two weeks out",
+]
+
+business_acumen = [
+    "$NFLX ER: subscription numbers don't look too good",
+    "$NFLX missed earnings estimates",
+    "$AAPL to launch new phone next month",
+    "factory in germany can start production sooner than expected",
+    
+]
+
+neutral = [
+    "$OXY stocks trading at $123",
+    ""
+]

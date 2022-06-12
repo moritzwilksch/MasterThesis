@@ -2,6 +2,7 @@ import csv
 import urllib.request
 from abc import ABC
 
+import joblib
 from scipy.special import softmax
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
                           TFAutoModelForSequenceClassification)
@@ -115,3 +116,13 @@ class Vader(ModelWrapper):
     def predict(self, text: str) -> str:
         scores = self.analyzer.polarity_scores(text)
         return self.prettify(scores)  # will drop the "compound" field
+
+
+class PyFinLogReg(ModelWrapper):
+    def __init__(self) -> None:
+        super().__init__()
+        self.model = joblib.load("outputs/models/final_LogisticRegressionModel.gz")
+
+    def predict(self, text: str) -> str:
+        preds = self.model.predict_proba([text]).ravel()
+        return self.prettify({"pos": preds[0], "neu": preds[1], "neg": preds[2]})

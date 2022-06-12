@@ -1,3 +1,4 @@
+from abc import ABC
 from unicodedata import bidirectional
 
 import pytorch_lightning as ptl
@@ -12,7 +13,15 @@ from src.dl_modeling.data import TweetDataModule
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 
 
-class RecurrentSAModel(ptl.LightningModule):
+class BaseDLModel(ABC, ptl.LightningModule):
+    def __init__(self):
+        super().__init__()
+        self.save_hyperparameters()
+        self.train_accuracy = torchmetrics.Accuracy()
+        self.val_accuracy = torchmetrics.Accuracy()
+
+
+class RecurrentSAModel(BaseDLModel):
     def __init__(
         self,
         vocab_size: int,
@@ -22,8 +31,7 @@ class RecurrentSAModel(ptl.LightningModule):
         lr: float = 1e-3,
     ):
         super().__init__()
-        self.save_hyperparameters()
-        self.accuracy = torchmetrics.Accuracy()
+
         # layers
         self.embedding = nn.Embedding(
             num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
@@ -58,16 +66,18 @@ class RecurrentSAModel(ptl.LightningModule):
         x, seq_lens, y = batch
         y_hat = self.forward(x, seq_lens)
         loss = F.cross_entropy(y_hat, y)
-        self.accuracy(y_hat, y)
+        self.train_accuracy(y_hat, y)
         self.log("loss", loss)
-        self.log("acc", self.accuracy, prog_bar=True)
+        self.log("train_acc", self.train_accuracy, prog_bar=True)
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
         x, seq_lens, y = batch
         y_hat = self.forward(x, seq_lens)
         loss = F.cross_entropy(y_hat, y)
+        self.val_accuracy(y_hat, y)
         self.log("val_loss", loss, batch_size=1024)
+        self.log("val_acc", self.val_accuracy, prog_bar=True)
         return {"val_loss": loss}
 
     def configure_optimizers(self):
