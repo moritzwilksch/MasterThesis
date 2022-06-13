@@ -10,7 +10,7 @@ data/NTUSD-Fin
 outputs/models/*
 *.bak
 lightning_logs/*
-
+outputs/tokenizers/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

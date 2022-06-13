@@ -23,15 +23,27 @@ if __name__ == "__main__":
             )
             data = TweetDataModule(split_idx=split_idx, batch_size=BATCH_SIZE)
 
-            model = RecurrentSAModel(
-                vocab_size=len(data.vocab),
-                token_dropout=trial.suggest_float("token_dropout", 0.0, 0.5),
-                embedding_dim=trial.suggest_int("embedding_dim", 4, 128),
-                gru_hidden_dim=trial.suggest_int("gru_hidden_dim", 4, 256),
-                hidden_dim=trial.suggest_int("hidden_dim", 8, 256),
-                dropout=trial.suggest_float("dropout", 0.0, 0.5),
-                lr=1e-3,
-            )
+            if trial is None:
+                model = RecurrentSAModel(
+                    vocab_size=3_000,
+                    token_dropout=0.2,
+                    embedding_dim=64,
+                    gru_hidden_dim=64,
+                    hidden_dim=64,
+                    dropout=0.5,
+                    lr=1e-3,
+                )
+
+            else:
+                model = RecurrentSAModel(
+                    vocab_size=3_000,
+                    token_dropout=trial.suggest_float("token_dropout", 0.0, 0.5),
+                    embedding_dim=trial.suggest_int("embedding_dim", 4, 128),
+                    gru_hidden_dim=trial.suggest_int("gru_hidden_dim", 4, 256),
+                    hidden_dim=trial.suggest_int("hidden_dim", 8, 256),
+                    dropout=trial.suggest_float("dropout", 0.0, 0.5),
+                    lr=1e-3,
+                )
 
             # callbacks
             checkpoint_callback = ptl.callbacks.ModelCheckpoint(
@@ -49,7 +61,7 @@ if __name__ == "__main__":
             # trainer
             trainer = ptl.Trainer(
                 logger=tb_logger,
-                max_epochs=5,
+                max_epochs=50,
                 log_every_n_steps=50,
                 auto_lr_find=False,
                 callbacks=[checkpoint_callback, early_stopping_callback],
@@ -75,6 +87,10 @@ if __name__ == "__main__":
             aucs_per_split.append(
                 roc_auc_score(data.ytest, preds.numpy(), multi_class="ovr")
             )
+
+            if trial is None:
+                break
+
         return np.mean(aucs_per_split)
 
     study = optuna.create_study(
@@ -85,3 +101,4 @@ if __name__ == "__main__":
     )
 
     study.optimize(objective, n_trials=100)
+    # objective(trial=None)  # one manual run for testing a model

@@ -20,3 +20,7 @@ backup:
 
 tensorboard:
 	tensorboard --logdir lightning_logs/
+
+rm-dl-artifacts:
+	-rm -rf lightning_logs/
+	-rm outputs/tokenizers/*

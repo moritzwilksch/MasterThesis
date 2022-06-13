@@ -3,6 +3,7 @@ import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
+import torchtext
 from sklearn.model_selection import KFold, train_test_split
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
@@ -66,7 +67,13 @@ class TweetDataModule(ptl.LightningDataModule):
             self.split_idxs_val[split_idx] = val_idx
 
         # for text processing, set tokenizer and vocab built on train split
-        self.tokenizer, self.vocab = self.get_tokenizer_for_split()
+        # self.tokenizer, self.vocab = self.get_tokenizer_for_split()
+        sp_model = torchtext.data.functional.load_sp_model(
+            "outputs/tokenizers/split_0.model"
+        )
+        self.tokenizer = torchtext.data.functional.sentencepiece_numericalizer(
+            sp_model=sp_model
+        )
 
     def train_dataloader(self):
         df_for_split = pd.concat([self.xtrainval, self.ytrainval], axis=1).iloc[
@@ -128,7 +135,8 @@ class TweetDataModule(ptl.LightningDataModule):
         seq_lens = []
 
         for text, label in batch:
-            tokens = self.vocab(self.tokenizer(text))
+            # tokens = self.vocab(self.tokenizer(text))
+            tokens = list(self.tokenizer([text]))[0]
             text_tensors.append(torch.Tensor(tokens).long())
             labels.append(label)
             seq_lens.append(len(tokens))

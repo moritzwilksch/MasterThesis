@@ -13,13 +13,15 @@ from src.utils.preprocessing import Preprocessor
 data = TweetDataModule(split_idx=0, batch_size=64)
 prepper = Preprocessor()
 model = RecurrentSAModel.load_from_checkpoint(
-    "lightning_logs/recurrent/best_checkpoints/recurrent-epoch=46-val_acc=0.62.ckpt"
+    "lightning_logs/recurrent-split-0/epoch=22-val_acc=0.63.ckpt"
 )
 model.eval()
 #%%
 s = "buy this great stock!!! long $AAPL"
 df = prepper.process(pl.DataFrame({"text": [s]}))
-x = torch.Tensor(data.vocab(data.tokenizer(df["text"][0]))).long().reshape(-1, 1)
+# x = torch.Tensor(data.vocab(data.tokenizer(df["text"][0]))).long().reshape(-1, 1)
+x = torch.Tensor(list(data.tokenizer(df["text"][0]))[0]).long().reshape(-1, 1)
+
 # F.softmax(model(x, seq_lens=[len(x)]), dim=0)
 model(x, seq_lens=[len(x)])
 #%%
