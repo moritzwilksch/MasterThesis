@@ -13,10 +13,10 @@ label:
 	python src/labeling/labeling_tool.py
 
 dashboard:
-	optuna-dashboard "sqlite:///tuning/optuna.db"
+	optuna-dashboard "sqlite:///tuning/dl_optuna.db"
 
 backup:
 	python src/scripts/upload_backup.py
 
 tensorboard:
-	tensorboard --logdir lightning_logs/recurrent
+	tensorboard --logdir lightning_logs/

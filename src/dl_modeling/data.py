@@ -16,9 +16,10 @@ class TweetDataSet(torch.utils.data.Dataset):
     def __init__(self, df: pd.DataFrame):
         super().__init__()
         self.data = df.reset_index(drop=True)  # will the index fck things up?
-        self.data["label"] = self.data["label"].map(
-            {"0": "1", "1": "0", "2": "1", "3": "2"}  # off-by-one!
-        )
+        # self.data["label"] = self.data["label"].map(
+        #     # {"0": "1", "1": "0", "2": "1", "3": "2"}  # off-by-one!
+        #     {"0": 1, "1": 0, "2": 1, "3": 2}  # off-by-one!
+        # )
 
     def __len__(self):
         return self.data.shape[0]
@@ -35,6 +36,14 @@ class TweetDataModule(ptl.LightningDataModule):
         self.batch_size = batch_size
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
+        self.all_data = self.all_data.with_column(
+            pl.when(pl.col("label") == "0")
+            .then(pl.lit("2"))
+            .otherwise(pl.col("label"))
+            .cast(pl.Int32)
+            .alias("label")
+        ).with_column(pl.col("label") - 1)
+
         self.all_data = prepper.process(self.all_data).to_pandas()
 
         self.xtrainval, self.xtest, self.ytrainval, self.ytest = train_test_split(
@@ -83,7 +92,9 @@ class TweetDataModule(ptl.LightningDataModule):
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(
-            TweetDataSet(pd.concat([self.xtest, self.ytest], axis=1)), batch_size=32
+            TweetDataSet(pd.concat([self.xtest, self.ytest], axis=1)),
+            batch_size=32,
+            collate_fn=self.collate_fn,
         )
 
     def get_tokenizer_for_split(self):
