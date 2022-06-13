@@ -3,7 +3,6 @@ import os
 
 import polars as pl
 import torchtext
-from lightgbm import train
 from sklearn.model_selection import KFold, train_test_split
 
 from src.utils.preprocessing import Preprocessor

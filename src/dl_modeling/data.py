@@ -165,9 +165,9 @@ class TweetDataModule(ptl.LightningDataModule):
 
         max_seq_len = max(seq_lens)
         for l in seq_lens:
-            mask = torch.zeros(max_seq_len, max_seq_len)
-            mask[:l, :l] = 1
-            masks.append(mask)
+            mask = torch.full((max_seq_len, max_seq_len), 0.0)
+            mask[:l, :l] = float("inf")
+            masks.append(mask.float())
 
         padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
 

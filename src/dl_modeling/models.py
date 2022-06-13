@@ -124,17 +124,17 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         x = x + self.pos_encodings(x)
 
-        # x = self.token_dropout(x)
-        x = self.transformer(x, src_mask=masks)
-        # x = self.dropout1(x)
-        x = torch.mean(x, axis=0)
+        x = self.token_dropout(x)
+        mask = torch.nn.Transformer.generate_square_subsequent_mask(x.size(0))
+        x = self.transformer(x, src_mask=torch.stack([mask] * x.size(1)))  # no mask for now
+        x = self.dropout1(x)
+        x = torch.mean(x, dim=0)
 
         x = self.hidden1(x)
         x = F.relu(x)
-        # x = self.dropout2(x)
+        x = self.dropout2(x)
 
         x = self.output_layer(x)
-        x = x.squeeze()
 
         return x
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         token_dropout=0.2,
         embedding_dim=128,
         nhead=1,
-        dim_ff=512,
+        dim_ff=128, 
         hidden_dim=64,
         dropout=0.2,
         lr=1e-3,
