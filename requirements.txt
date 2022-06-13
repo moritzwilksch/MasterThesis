@@ -14,3 +14,7 @@ polars
 python-dotenv
 pymongoarrow
 shap
+optuna
+pytorch-lightning
+torchtext
+positional-encodings

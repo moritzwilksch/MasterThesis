@@ -8,7 +8,6 @@ from sklearn.model_selection import KFold, train_test_split
 
 from src.utils.preprocessing import Preprocessor
 
-
 all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
 all_data = all_data.with_column(
     pl.when(pl.col("label") == "0")

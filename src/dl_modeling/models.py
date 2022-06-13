@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
+from positional_encodings import PositionalEncoding1D
 from pytorch_lightning.loggers import TensorBoardLogger
 from regex import R
 
@@ -90,3 +91,108 @@ class RecurrentSAModel(BaseDLModel):
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
+
+
+class TransformerSAModel(BaseDLModel):
+    def __init__(
+        self,
+        vocab_size: int,
+        token_dropout: float,
+        embedding_dim: int,
+        nhead: int,
+        dim_ff: int,
+        hidden_dim: int,
+        dropout: float,
+        lr: float = 1e-3,
+    ):
+        super().__init__()
+
+        # layers
+        self.embedding = nn.Embedding(
+            num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
+        )
+        self.pos_encodings = PositionalEncoding1D(embedding_dim)
+        self.token_dropout = nn.Dropout(token_dropout)
+
+        self.transformer = nn.TransformerEncoderLayer(embedding_dim, nhead, dim_ff)
+        self.dropout1 = nn.Dropout(dropout)
+        self.hidden1 = nn.Linear(embedding_dim, hidden_dim)
+        self.dropout2 = nn.Dropout(dropout)
+        self.output_layer = nn.Linear(hidden_dim, 3)
+
+    def forward(self, x, masks):
+        x = self.embedding(x)
+        x = x + self.pos_encodings(x)
+
+        # x = self.token_dropout(x)
+        x = self.transformer(x, src_mask=masks)
+        # x = self.dropout1(x)
+        x = torch.mean(x, axis=0)
+
+        x = self.hidden1(x)
+        x = F.relu(x)
+        # x = self.dropout2(x)
+
+        x = self.output_layer(x)
+        x = x.squeeze()
+
+        return x
+
+    def training_step(self, batch, batch_idx):
+        x, masks, y = batch
+        y_hat = self.forward(x, masks)
+        loss = F.cross_entropy(y_hat, y)
+        self.train_accuracy(y_hat, y)
+        self.log("loss", loss, batch_size=BATCH_SIZE)
+        self.log("train_acc", self.train_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+        return {"loss": loss}
+
+    def validation_step(self, batch, batch_idx):
+        x, seq_lens, y = batch
+        y_hat = self.forward(x, seq_lens)
+        loss = F.cross_entropy(y_hat, y)
+        self.val_accuracy(y_hat, y)
+        self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+
+    def predict_step(self, batch, batch_idx):
+        x, seq_lens, y = batch
+        y_hat = self.forward(x, seq_lens)
+        return F.softmax(y_hat, dim=1)
+
+    def configure_optimizers(self):
+        return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
+
+
+#%%
+if __name__ == "__main__":
+    tb_logger = TensorBoardLogger("lightning_logs", name=f"transformer-split-{0}")
+    data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="transformer")
+
+    model = TransformerSAModel(
+        vocab_size=3_000,
+        token_dropout=0.2,
+        embedding_dim=128,
+        nhead=1,
+        dim_ff=512,
+        hidden_dim=64,
+        dropout=0.2,
+        lr=1e-3,
+    )
+
+    # trainer
+    trainer = ptl.Trainer(
+        logger=tb_logger,
+        max_epochs=10,
+        log_every_n_steps=50,
+        # auto_lr_find=True,
+    )
+
+    # res = trainer.tune(model, data.train_dataloader())
+    # res["lr_find"].plot()
+
+    trainer.fit(
+        model,
+        train_dataloaders=data.train_dataloader(),
+        val_dataloaders=data.val_dataloader(),
+    )

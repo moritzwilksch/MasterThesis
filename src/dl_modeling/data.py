@@ -30,11 +30,16 @@ class TweetDataSet(torch.utils.data.Dataset):
 
 
 class TweetDataModule(ptl.LightningDataModule):
-    def __init__(self, split_idx, batch_size: int):
+    def __init__(self, split_idx, batch_size: int, model_type: str = "recurrent"):
         super().__init__()
 
         self.split_idx = split_idx
         self.batch_size = batch_size
+        self.collate_fn_to_use = (
+            self.collate_fn
+            if model_type == "recurrent"
+            else self.transformer_collate_fn
+        )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
         self.all_data = self.all_data.with_column(
@@ -83,7 +88,7 @@ class TweetDataModule(ptl.LightningDataModule):
         return torch.utils.data.DataLoader(
             TweetDataSet(df_for_split),
             batch_size=self.batch_size,
-            collate_fn=self.collate_fn,
+            collate_fn=self.collate_fn_to_use,
             num_workers=4,
         )
 
@@ -94,14 +99,15 @@ class TweetDataModule(ptl.LightningDataModule):
         return torch.utils.data.DataLoader(
             TweetDataSet(df_for_split),
             batch_size=1024,
-            collate_fn=self.collate_fn,
+            collate_fn=self.collate_fn_to_use,
+            num_workers=1,
         )
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(
             TweetDataSet(pd.concat([self.xtest, self.ytest], axis=1)),
-            batch_size=32,
-            collate_fn=self.collate_fn,
+            batch_size=1024,
+            collate_fn=self.collate_fn_to_use,
         )
 
     def get_tokenizer_for_split(self):
@@ -143,6 +149,33 @@ class TweetDataModule(ptl.LightningDataModule):
 
         padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
         return padded_sequences, seq_lens, torch.Tensor(labels).long()
+
+    def transformer_collate_fn(self, batch):
+        text_tensors = []
+        labels = []
+        seq_lens = []
+        masks = []
+
+        for text, label in batch:
+            # tokens = self.vocab(self.tokenizer(text))
+            tokens = list(self.tokenizer([text]))[0]
+            text_tensors.append(torch.Tensor(tokens).long())
+            labels.append(label)
+            seq_lens.append(len(tokens))
+
+        max_seq_len = max(seq_lens)
+        for l in seq_lens:
+            mask = torch.zeros(max_seq_len, max_seq_len)
+            mask[:l, :l] = 1
+            masks.append(mask)
+
+        padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
+
+        # repeat mask tensor for each head
+        masks = torch.stack(masks, dim=0)
+        masks = torch.cat([masks] * 1, dim=0)
+
+        return padded_sequences, masks, torch.Tensor(labels).long()
 
 
 if __name__ == "__main__":

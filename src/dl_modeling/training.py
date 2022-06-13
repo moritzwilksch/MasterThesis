@@ -4,7 +4,6 @@ import numpy as np
 import optuna
 import pytorch_lightning as ptl
 import torch
-from lightgbm import early_stopping
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.metrics import roc_auc_score
 
@@ -61,7 +60,7 @@ if __name__ == "__main__":
             # trainer
             trainer = ptl.Trainer(
                 logger=tb_logger,
-                max_epochs=50,
+                max_epochs=1,
                 log_every_n_steps=50,
                 auto_lr_find=False,
                 callbacks=[checkpoint_callback, early_stopping_callback],
@@ -80,13 +79,22 @@ if __name__ == "__main__":
             model = RecurrentSAModel.load_from_checkpoint(best_model_path)
             model.eval()
 
-            test = data.test_dataloader()
-            batched_preds = trainer.predict(model, test)
+            val = data.val_dataloader()
 
-            preds = torch.vstack(batched_preds)  # .argmax(dim=1)
+            # create val-set predictions
+            batched_preds = trainer.predict(model, val)
+            preds = torch.vstack(batched_preds)
+
+            # we need to extract the val-set labels from the dataloader
+            yval_true = []
+            for _, _, y in data.val_dataloader():
+                yval_true.append(y.numpy())
+            yval_true = np.concatenate(yval_true)
+
             aucs_per_split.append(
-                roc_auc_score(data.ytest, preds.numpy(), multi_class="ovr")
+                roc_auc_score(yval_true, preds.numpy(), multi_class="ovr")
             )
+            print(f"Split {split_idx} AUCs: {aucs_per_split}")
 
             if trial is None:
                 break
