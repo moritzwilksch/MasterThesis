@@ -59,7 +59,7 @@ if __name__ == "__main__":
             # trainer
             trainer = ptl.Trainer(
                 logger=tb_logger,
-                max_epochs=1,
+                max_epochs=50,
                 log_every_n_steps=50,
                 auto_lr_find=False,
                 callbacks=[checkpoint_callback, early_stopping_callback],

@@ -18,3 +18,4 @@ optuna
 pytorch-lightning
 torchtext
 positional-encodings
+regex
