@@ -13,6 +13,6 @@ idx_to_token_map = {v: k for k, v in model["vectorizer"].vocabulary_.items()}
 
 for row in top_per_class:
     for entry in row:
-        print(idx_to_token_map[entry], end=" | ")
-    print()
-    print("-" * 80)
+        print(idx_to_token_map[entry], end=", ")
+    print("\\\\")
+    # print("-" * 80)

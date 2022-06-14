@@ -11,10 +11,10 @@ set_style()
 #%%
 data = toml.load("outputs/static/model_test_scores.toml")
 
-scores = pd.DataFrame({k: data[k]["test_scores"] for k in data})
+scores = pd.DataFrame({k: data[k]["test_scores"] for k in data}).drop("SVM", axis=1)
 scores_melted = scores.melt(var_name="model", value_name="score")
 
-times = pd.DataFrame({k: data[k]["times_taken"] for k in data})
+times = pd.DataFrame({k: data[k]["times_taken"] for k in data}).drop("SVM", axis=1)
 times = times / 2000 * 1000  # per-sample in ms!!!
 times_melted = times.melt(var_name="model", value_name="time")
 

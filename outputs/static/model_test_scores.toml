@@ -30,7 +30,7 @@ times_taken = [
     232.7220495819929,
 ]
 
-[LogisticRegression]
+[LogReg]
 test_scores = [
     0.818702626427673,
     0.8152634040924299,
@@ -46,7 +46,7 @@ times_taken = [
     0.07136797602288425,
 ]
 
-[Vader]
+[VADER]
 test_scores = [
     0.5665970624750207,
     0.5777657439421432,
