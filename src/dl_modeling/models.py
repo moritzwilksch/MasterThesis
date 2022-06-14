@@ -124,7 +124,9 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         # x = x + self.pos_encodings(x)
         x = torch.swapaxes(x, 0, 1)
-        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = self.pos_encodings(
+            x
+        )  # this library needs (batch_size, x, emb_dim) tensors!!
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)

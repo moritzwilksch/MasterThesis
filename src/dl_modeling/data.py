@@ -36,7 +36,9 @@ class TweetDataModule(ptl.LightningDataModule):
         self.split_idx = split_idx
         self.batch_size = batch_size
         self.collate_fn_to_use = (
-            self.collate_fn if model_type == "recurrent" else self.transformer_collate_fn
+            self.collate_fn
+            if model_type == "recurrent"
+            else self.transformer_collate_fn
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
