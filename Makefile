@@ -23,4 +23,4 @@ tensorboard:
 
 rm-dl-artifacts:
 	-rm -rf lightning_logs/
-	-rm outputs/tokenizers/*
+	# -rm outputs/tokenizers/*
