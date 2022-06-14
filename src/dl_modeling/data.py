@@ -36,9 +36,7 @@ class TweetDataModule(ptl.LightningDataModule):
         self.split_idx = split_idx
         self.batch_size = batch_size
         self.collate_fn_to_use = (
-            self.collate_fn
-            if model_type == "recurrent"
-            else self.transformer_collate_fn
+            self.collate_fn if model_type == "recurrent" else self.transformer_collate_fn
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
@@ -165,9 +163,9 @@ class TweetDataModule(ptl.LightningDataModule):
 
         max_seq_len = max(seq_lens)
         for l in seq_lens:
-            mask = torch.full((max_seq_len, max_seq_len), 0.0)
-            mask[:l, :l] = float("inf")
-            masks.append(mask.float())
+            mask = torch.full((max_seq_len,), True)
+            mask[:l] = False
+            masks.append(mask.bool())
 
         padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
 

@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
-from positional_encodings import PositionalEncoding1D
+from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
 from regex import R
 
@@ -111,7 +111,7 @@ class TransformerSAModel(BaseDLModel):
         self.embedding = nn.Embedding(
             num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
         )
-        self.pos_encodings = PositionalEncoding1D(embedding_dim)
+        self.pos_encodings = Summer(PositionalEncoding1D(embedding_dim))
         self.token_dropout = nn.Dropout(token_dropout)
 
         self.transformer = nn.TransformerEncoderLayer(embedding_dim, nhead, dim_ff)
@@ -122,11 +122,13 @@ class TransformerSAModel(BaseDLModel):
 
     def forward(self, x, masks):
         x = self.embedding(x)
-        x = x + self.pos_encodings(x)
+        # x = x + self.pos_encodings(x)
+        x = torch.swapaxes(x, 0, 1)
+        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)
-        mask = torch.nn.Transformer.generate_square_subsequent_mask(x.size(0))
-        x = self.transformer(x, src_mask=torch.stack([mask] * x.size(1)))  # no mask for now
+        x = self.transformer(x, src_key_padding_mask=masks)
         x = self.dropout1(x)
         x = torch.mean(x, dim=0)
 
@@ -148,16 +150,16 @@ class TransformerSAModel(BaseDLModel):
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
-        x, seq_lens, y = batch
-        y_hat = self.forward(x, seq_lens)
+        x, masks, y = batch
+        y_hat = self.forward(x, masks)
         loss = F.cross_entropy(y_hat, y)
         self.val_accuracy(y_hat, y)
         self.log("val_loss", loss, batch_size=BATCH_SIZE)
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):
-        x, seq_lens, y = batch
-        y_hat = self.forward(x, seq_lens)
+        x, masks, y = batch
+        y_hat = self.forward(x, masks)
         return F.softmax(y_hat, dim=1)
 
     def configure_optimizers(self):
@@ -174,7 +176,7 @@ if __name__ == "__main__":
         token_dropout=0.2,
         embedding_dim=128,
         nhead=1,
-        dim_ff=128, 
+        dim_ff=128,
         hidden_dim=64,
         dropout=0.2,
         lr=1e-3,
@@ -188,8 +190,15 @@ if __name__ == "__main__":
         # auto_lr_find=True,
     )
 
-    # res = trainer.tune(model, data.train_dataloader())
-    # res["lr_find"].plot()
+    # res = trainer.tuner.lr_find(
+    #     model,
+    #     data.train_dataloader(),
+    #     data.val_dataloader(),
+    #     num_training=100,
+    #     min_lr=1e-6,
+    #     max_lr=0.1,
+    # )
+    # res.plot()
 
     trainer.fit(
         model,
