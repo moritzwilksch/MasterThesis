@@ -100,11 +100,11 @@ if __name__ == "__main__":
         return np.mean(aucs_per_split)
 
     study = optuna.create_study(
-        storage="sqlite:///tuning/dl_optuna.db",
+        storage="sqlite:///tuning/dl_optuna_gru.db",
         study_name=f"GRU",
         direction="maximize",
         load_if_exists=True,
     )
 
-    study.optimize(objective, n_trials=100)
+    study.optimize(objective, n_trials=50)
     # objective(trial=None)  # one manual run for testing a model
