@@ -1,11 +1,15 @@
 import csv
+import pandas as pd
 import urllib.request
 from abc import ABC
-
+import numpy as np
 import joblib
 from scipy.special import softmax
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          TFAutoModelForSequenceClassification)
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TFAutoModelForSequenceClassification,
+)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
@@ -126,3 +130,43 @@ class PyFinLogReg(ModelWrapper):
     def predict(self, text: str) -> str:
         preds = self.model.predict_proba([text]).ravel()
         return self.prettify({"pos": preds[0], "neu": preds[1], "neg": preds[2]})
+
+
+# -----------------------------------------------------------------------------
+class NTUSDFin(ModelWrapper):
+    def __init__(self, path_to_ntusd_folder: str = "data/NTUSD-Fin/") -> None:
+        super().__init__()
+        dfs = [
+            pd.read_json(f"{path_to_ntusd_folder}/{f}")[["token", "market_sentiment"]]
+            for f in [
+                "words.json",
+                "NTUSD_Fin_emoji_v1.0.json",
+                "NTUSD_Fin_hashtag_v1.0.json",
+            ]
+        ]
+        self.ntusd = pd.concat(dfs).reset_index(drop=True)
+        self.ntusd = {
+            k: v for k, v in [r.values() for r in self.ntusd.to_dict(orient="records")]
+        }  # dict: token -> sentiment
+
+    def predict(self, text: str) -> float:
+        # text_sentiment = 0.0
+        text_sentiment = {"pos": 0.0, "neu": 0.0, "neg": 0.0}
+
+        for token, token_sentiment in self.ntusd.items():
+            if token in text:
+                if token_sentiment > 0.0:
+                    text_sentiment["pos"] += np.abs(token_sentiment)
+                elif token_sentiment < 0.0:
+                    text_sentiment["neg"] += np.abs(token_sentiment)
+                else:
+                    text_sentiment["neu"] += np.abs(token_sentiment)
+
+        # normalize to resemble probas
+        factor = sum(text_sentiment.values())
+        if factor == 0.0:
+            prediction = {"pos": 0.0, "neu": 1.0, "neg": 0.0}
+        else:
+            prediction = {k: v / factor for k, v in text_sentiment.items()}
+        
+        return self.prettify(prediction)
