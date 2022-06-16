@@ -1,11 +1,14 @@
 #%%
-import tensorflow as tf
-from transformers import BertTokenizer, TFBertModel
+from transformers import DistilBertTokenizer, DistilBertModel
+import torch
 
-tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
-model = TFBertModel.from_pretrained("bert-base-cased")
+tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
+model = DistilBertModel.from_pretrained("distilbert-base-uncased")
 
 #%%
-inputs = tokenizer("Hello, my dog is cute", return_tensors="tf")
-outputs = model(inputs).last_hidden_state
-print(outputs)
+tokens = tokenizer(["hello world", "this is a short test"], return_tensors="pt", truncation=True, padding=True)
+tokens
+
+
+#%%
+model(tokens)
