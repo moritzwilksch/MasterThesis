@@ -94,6 +94,14 @@ class RecurrentSAModel(BaseDLModel):
 
 
 class TransformerSAModel(BaseDLModel):
+    BEST_PARAMS = {
+        "dim_ff": 241,
+        "dropout": 0.18409452359591996,
+        "embedding_dim": 105,
+        "hidden_dim": 249,
+        "token_dropout": 0.463518938835938,
+    }  # Val AUC = 0.81899, Test AUC = 0.8005475221900585
+
     def __init__(
         self,
         vocab_size: int,
@@ -124,9 +132,7 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         # x = x + self.pos_encodings(x)
         x = torch.swapaxes(x, 0, 1)
-        x = self.pos_encodings(
-            x
-        )  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)

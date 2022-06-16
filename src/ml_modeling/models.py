@@ -110,9 +110,9 @@ class BaseSklearnSAModel(ABC):
 class LogisticRegressionModel(BaseSklearnSAModel):
     # this is the final model based on nested CV
     FINAL_BEST_PARAMS = {
-        "model__C": 1.3425051723565153,
+        "model__C": 1.4281305851678692,
         "vectorizer__analyzer": "char_wb",
-        "vectorizer__min_df": 0.00012376778865915285,
+        "vectorizer__min_df": 1.021498227938179e-06,
         "vectorizer__ngram_range": (4, 4),
     }
 

@@ -36,9 +36,7 @@ class TweetDataModule(ptl.LightningDataModule):
         self.split_idx = split_idx
         self.batch_size = batch_size
         self.collate_fn_to_use = (
-            self.collate_fn
-            if model_type == "recurrent"
-            else self.transformer_collate_fn
+            self.collate_fn if model_type == "recurrent" else self.transformer_collate_fn
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
@@ -109,6 +107,24 @@ class TweetDataModule(ptl.LightningDataModule):
             batch_size=1024,
             collate_fn=self.collate_fn_to_use,
         )
+
+    def trainval_dataloader_for_retraining(self):
+        df_for_split = pd.concat([self.xtrainval, self.ytrainval], axis=1)
+        train, val = train_test_split(df_for_split, test_size=0.1, shuffle=True)
+        train_dataloader = torch.utils.data.DataLoader(
+            TweetDataSet(train),
+            batch_size=self.batch_size,
+            collate_fn=self.collate_fn_to_use,
+            num_workers=2,
+        )
+        val_dataloader = torch.utils.data.DataLoader(
+            TweetDataSet(val),
+            batch_size=1024,
+            collate_fn=self.collate_fn_to_use,
+            num_workers=2,
+        )
+
+        return train_dataloader, val_dataloader
 
     def get_tokenizer_for_split(self):
         tokenizer = get_tokenizer("basic_english")
