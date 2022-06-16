@@ -1,15 +1,13 @@
 import csv
-import pandas as pd
 import urllib.request
 from abc import ABC
-import numpy as np
+
 import joblib
+import numpy as np
+import pandas as pd
 from scipy.special import softmax
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    TFAutoModelForSequenceClassification,
-)
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          TFAutoModelForSequenceClassification)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
@@ -168,5 +166,5 @@ class NTUSDFin(ModelWrapper):
             prediction = {"pos": 0.0, "neu": 1.0, "neg": 0.0}
         else:
             prediction = {k: v / factor for k, v in text_sentiment.items()}
-        
+
         return self.prettify(prediction)

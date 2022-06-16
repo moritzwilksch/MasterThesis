@@ -3,20 +3,20 @@ import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import roc_auc_score, confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
 from src.utils.preprocessing import Preprocessor
 
 #%%
-data = TweetDataModule(split_idx=0, batch_size=64, model_type="transformer")
+data = TweetDataModule(split_idx="retrain", batch_size=64, model_type="transformer")
 prepper = Preprocessor()
 # model = RecurrentSAModel.load_from_checkpoint(
 #     "lightning_logs/recurrent-split-0/epoch=22-val_acc=0.63.ckpt"
 # )
 model = TransformerSAModel.load_from_checkpoint(
-    "lightning_logs/transformer_final/final_epoch=24-val_acc=0.64.ckpt"
+    "lightning_logs/transformer_final/final_epoch=37-val_acc=0.62.ckpt"
 )
 model.eval()
 

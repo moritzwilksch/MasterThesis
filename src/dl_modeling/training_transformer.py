@@ -7,6 +7,7 @@ from sklearn.metrics import roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import BATCH_SIZE, TransformerSAModel
+
 torch.set_num_threads(8)
 if __name__ == "__main__":
 
@@ -103,24 +104,28 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    # study = optuna.create_study(
-    #     storage="sqlite:///tuning/dl_optuna.db",
-    #     study_name=f"Transformer",
-    #     direction="maximize",
-    #     load_if_exists=True,
-    # )
+    study = optuna.create_study(
+        storage="sqlite:///tuning/dl_optuna_transformer.db",
+        study_name=f"Transformer",
+        direction="maximize",
+        load_if_exists=True,
+    )
 
-    # study.optimize(objective, n_trials=100)
+    study.optimize(objective, n_trials=100)
 
     # objective(trial=None)  # one manual run
 
 
 def retrain_best_model():
-    data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="transformer")
+    data = TweetDataModule(
+        split_idx="retrain", batch_size=BATCH_SIZE, model_type="transformer"
+    )
 
     train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
 
-    model = TransformerSAModel(vocab_size=3_000, nhead=1, **TransformerSAModel.BEST_PARAMS)
+    model = TransformerSAModel(
+        vocab_size=3_000, nhead=1, **TransformerSAModel.BEST_PARAMS
+    )
 
     tb_logger = TensorBoardLogger("lightning_logs", name=f"transformer_final")
 
@@ -172,5 +177,6 @@ def retrain_best_model():
     ytest_true = np.concatenate(ytest_true)
 
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
+
 
 retrain_best_model()

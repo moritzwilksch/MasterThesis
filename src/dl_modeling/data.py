@@ -32,11 +32,19 @@ class TweetDataSet(torch.utils.data.Dataset):
 class TweetDataModule(ptl.LightningDataModule):
     def __init__(self, split_idx, batch_size: int, model_type: str = "recurrent"):
         super().__init__()
+        if split_idx == "retrain":
+            RETRAIN = True
+            split_idx = 0
+        else:
+            RETRAIN = False
 
+        print(f"Tokenizer retrain: {RETRAIN}")
         self.split_idx = split_idx
         self.batch_size = batch_size
         self.collate_fn_to_use = (
-            self.collate_fn if model_type == "recurrent" else self.transformer_collate_fn
+            self.collate_fn
+            if model_type == "recurrent"
+            else self.transformer_collate_fn
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
@@ -71,12 +79,20 @@ class TweetDataModule(ptl.LightningDataModule):
 
         # for text processing, set tokenizer and vocab built on train split
         # self.tokenizer, self.vocab = self.get_tokenizer_for_split()
-        sp_model = torchtext.data.functional.load_sp_model(
-            "outputs/tokenizers/split_0.model"
-        )
-        self.tokenizer = torchtext.data.functional.sentencepiece_numericalizer(
-            sp_model=sp_model
-        )
+
+        if RETRAIN:
+            self.tokenizer = torchtext.data.functional.sentencepiece_numericalizer(
+                torchtext.data.functional.load_sp_model(
+                    f"outputs/tokenizers/retraining_trainval.model"
+                )
+            )
+        else:
+            sp_model = torchtext.data.functional.load_sp_model(
+                f"outputs/tokenizers/split_{split_idx}.model"
+            )
+            self.tokenizer = torchtext.data.functional.sentencepiece_numericalizer(
+                sp_model=sp_model
+            )
 
     def train_dataloader(self):
         df_for_split = pd.concat([self.xtrainval, self.ytrainval], axis=1).iloc[

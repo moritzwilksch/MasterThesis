@@ -36,4 +36,13 @@ for idx, (train_idx, val_idx) in enumerate(kfold.split(xtrainval)):
         model_type="unigram",  # outperforms BPE
         model_prefix=f"outputs/tokenizers/split_{idx}",
     )
+
+# for re-training:
+xtrainval.to_csv("data/temp.csv", index=False, header=False)
+torchtext.data.functional.generate_sp_model(
+    "data/temp.csv",
+    vocab_size=3_000,
+    model_type="unigram",  # outperforms BPE
+    model_prefix=f"outputs/tokenizers/retraining_trainval",
+)
 os.remove("data/temp.csv")

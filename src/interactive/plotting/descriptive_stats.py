@@ -62,5 +62,6 @@ ax.yaxis.set_tick_params(length=0, pad=20)
 ax.set_xlabel("Proportion of Tweets per Category", weight="bold")
 ax.legend()
 fig.savefig(
-    "outputs/plots/class_distributions.pdf", bbox_inches="tight",
+    "outputs/plots/class_distributions.pdf",
+    bbox_inches="tight",
 )

@@ -4,15 +4,10 @@ import toml
 from rich.console import Console
 from rich.panel import Panel
 
-from src.experimental.demo_tweets.models import (
-    FinancialBERT,
-    FinBERT,
-    ModelWrapper,
-    PyFinLogReg,
-    TwitterRoberta,
-    Vader,
-    NTUSDFin,
-)
+from src.experimental.demo_tweets.models import (FinancialBERT, FinBERT,
+                                                 ModelWrapper, NTUSDFin,
+                                                 PyFinLogReg, TwitterRoberta,
+                                                 Vader)
 from src.utils.storage import bucket
 
 c = Console(record=True)
@@ -66,7 +61,9 @@ class Experiment:
                 c.print()
 
         c.print(
-            "\n".join([s.replace("$", "\$").replace("%", "\%") for s in latex_lines][1:])
+            "\n".join(
+                [s.replace("$", "\$").replace("%", "\%") for s in latex_lines][1:]
+            )
         )
 
 
