@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torchmetrics
 from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
-
+from transformers import pipeline, AutoModel, AutoTokenizer
 from src.dl_modeling.data import TweetDataModule
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
@@ -175,21 +175,85 @@ class TransformerSAModel(BaseDLModel):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
 
+class BERTSAModel(BaseDLModel):
+    BEST_PARAMS = {}
+
+    def __init__(
+        self,
+        hidden_dim: int,
+        dropout: float,
+        lr: float = 1e-3,
+    ):
+        super().__init__()
+        self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")  
+
+        # layers
+        self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
+        self.bert.eval()
+        for param in self.bert.parameters():
+            param.requires_grad = False
+
+        # self.hidden1 = nn.Linear(768, hidden_dim)
+        # self.dropout2 = nn.Dropout(dropout)
+        self.output_layer = nn.Linear(768, 3)
+
+    def forward(self, x):
+
+        inputs = self.tokenizer(list(x), return_tensors="pt", padding=True, truncation=True)
+        x = self.bert(**inputs).last_hidden_state
+        x = torch.mean(x, dim=1).detach()  # batch_first==True, so dim=1 averages out sequence length
+
+        # x = self.hidden1(x)
+        # x = F.relu(x)
+        # x = self.dropout2(x)
+
+        x = self.output_layer(x)
+
+        return x
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.train_accuracy(y_hat, y)
+        self.log("loss", loss, batch_size=BATCH_SIZE)
+        self.log("train_acc", self.train_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+        return {"loss": loss}
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.val_accuracy(y_hat, y)
+        self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+
+    def predict_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.forward(x)
+        return F.softmax(y_hat, dim=1)
+
+    def configure_optimizers(self):
+        return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
+
+
 #%%
 if __name__ == "__main__":
-    tb_logger = TensorBoardLogger("lightning_logs", name=f"transformer-split-{0}")
-    data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="transformer")
+    tb_logger = TensorBoardLogger("lightning_logs", name=f"bertbased-split-{0}")
+    data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="bert")
 
-    model = TransformerSAModel(
-        vocab_size=3_000,
-        token_dropout=0.2,
-        embedding_dim=128,
-        nhead=1,
-        dim_ff=128,
-        hidden_dim=64,
-        dropout=0.2,
-        lr=1e-3,
-    )
+    # model = TransformerSAModel(
+    #     vocab_size=3_000,
+    #     token_dropout=0.2,
+    #     embedding_dim=128,
+    #     nhead=1,
+    #     dim_ff=128,
+    #     hidden_dim=64,
+    #     dropout=0.2,
+    #     lr=1e-3,
+    # )
+
+    model = BERTSAModel(12, 0.2)
 
     # trainer
     trainer = ptl.Trainer(
