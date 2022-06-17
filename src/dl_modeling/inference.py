@@ -3,7 +3,7 @@ import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import confusion_matrix, roc_auc_score
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
@@ -16,15 +16,15 @@ prepper = Preprocessor()
 #     "lightning_logs/recurrent-split-0/epoch=22-val_acc=0.63.ckpt"
 # )
 model = TransformerSAModel.load_from_checkpoint(
-    "lightning_logs/transformer_final/final_epoch=27-val_acc=0.66.ckpt"
+    "lightning_logs/transformer_final/final_epoch=26-val_acc=0.67.ckpt"
 )
 model.eval()
 
 
 #%%
 s = "short $TSLA, buy puts"
-# s = "long $TSLA, buy calls"
-s = "$OXY just laid off 40% of staff"
+s = "long $TSLA, buy calls"
+# s = "$OXY just laid off 40% of staff"
 
 df = prepper.process(pl.DataFrame({"text": [s]}))
 # x = torch.Tensor(data.vocab(data.tokenizer(df["text"][0]))).long().reshape(-1, 1)
@@ -43,3 +43,4 @@ batched_preds = trainer.predict(model, test)
 preds = torch.vstack(batched_preds)  # .argmax(dim=1)
 print(roc_auc_score(data.ytest, preds.numpy(), multi_class="ovr"))
 print(confusion_matrix(data.ytest, preds.numpy().argmax(axis=1), normalize="true"))
+print(classification_report(data.ytest, preds.numpy().argmax(axis=1)))

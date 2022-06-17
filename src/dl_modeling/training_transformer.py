@@ -38,7 +38,7 @@ if __name__ == "__main__":
             else:
                 model = TransformerSAModel(
                     vocab_size=3_000,
-                    nhead=1,
+                    nhead=4,
                     # token_dropout=trial.suggest_float("token_dropout", 0.0, 0.5),
                     # embedding_dim=trial.suggest_int("embedding_dim", 4, 128),
                     # dim_ff=trial.suggest_int("dim_ff", 4, 256),
@@ -51,14 +51,14 @@ if __name__ == "__main__":
             # callbacks
             checkpoint_callback = ptl.callbacks.ModelCheckpoint(
                 save_top_k=1,
-                monitor="val_acc",
-                mode="max",
+                monitor="val_loss",
+                mode="min",
                 dirpath=f"lightning_logs/transformer-split-{split_idx}",
                 filename="{epoch:02d}-{val_acc:.2f}",
             )
 
             early_stopping_callback = ptl.callbacks.EarlyStopping(
-                monitor="val_acc", mode="max", patience=10
+                monitor="val_loss", mode="min", patience=10
             )
 
             # trainer
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     # study.optimize(objective, n_trials=50)
 
-    objective(trial=None)  # one manual run
+    # objective(trial=None)  # one manual run
 
 
 def retrain_best_model():
@@ -133,14 +133,14 @@ def retrain_best_model():
     # callbacks
     checkpoint_callback = ptl.callbacks.ModelCheckpoint(
         save_top_k=1,
-        monitor="val_acc",
-        mode="max",
+        monitor="val_loss",
+        mode="min",
         dirpath=f"lightning_logs/transformer_final",
         filename="final_{epoch:02d}-{val_acc:.2f}",
     )
 
     early_stopping_callback = ptl.callbacks.EarlyStopping(
-        monitor="val_acc", mode="max", patience=10
+        monitor="val_loss", mode="min", patience=10
     )
 
     # trainer
@@ -180,4 +180,4 @@ def retrain_best_model():
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-# retrain_best_model()
+retrain_best_model()

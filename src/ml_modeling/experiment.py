@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from rich.prompt import Prompt
 from scipy.special import softmax
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import KFold
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
                           TFAutoModelForSequenceClassification)
@@ -81,6 +81,8 @@ class Experiment:
             test_scores.append(
                 roc_auc_score(test_data["label"], preds, multi_class="ovr")
             )
+
+            print(classification_report(test_data["label"].astype("int"), preds.argmax(axis=1) + 1))
 
         return val_scores, test_scores, best_params, times_taken
 
