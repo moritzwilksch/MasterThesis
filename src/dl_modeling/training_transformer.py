@@ -38,13 +38,14 @@ if __name__ == "__main__":
             else:
                 model = TransformerSAModel(
                     vocab_size=3_000,
-                    token_dropout=trial.suggest_float("token_dropout", 0.0, 0.5),
-                    embedding_dim=trial.suggest_int("embedding_dim", 4, 128),
                     nhead=1,
-                    dim_ff=trial.suggest_int("dim_ff", 4, 256),
-                    hidden_dim=trial.suggest_int("hidden_dim", 8, 256),
-                    dropout=trial.suggest_float("dropout", 0.0, 0.5),
-                    lr=1e-3,
+                    # token_dropout=trial.suggest_float("token_dropout", 0.0, 0.5),
+                    # embedding_dim=trial.suggest_int("embedding_dim", 4, 128),
+                    # dim_ff=trial.suggest_int("dim_ff", 4, 256),
+                    # hidden_dim=trial.suggest_int("hidden_dim", 8, 256),
+                    # dropout=trial.suggest_float("dropout", 0.0, 0.5),
+                    # lr=1e-3,
+                    **TransformerSAModel.BEST_PARAMS,
                 )
 
             # callbacks
@@ -104,16 +105,16 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    study = optuna.create_study(
-        storage="sqlite:///tuning/dl_optuna_transformer.db",
-        study_name=f"Transformer",
-        direction="maximize",
-        load_if_exists=True,
-    )
+    # study = optuna.create_study(
+    #     storage="sqlite:///tuning/dl_optuna_transformer.db",
+    #     study_name=f"Transformer",
+    #     direction="maximize",
+    #     load_if_exists=True,
+    # )
 
-    study.optimize(objective, n_trials=50)
+    # study.optimize(objective, n_trials=50)
 
-    # objective(trial=None)  # one manual run
+    objective(trial=None)  # one manual run
 
 
 def retrain_best_model():
@@ -179,4 +180,4 @@ def retrain_best_model():
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-retrain_best_model()
+# retrain_best_model()

@@ -16,7 +16,7 @@ prepper = Preprocessor()
 #     "lightning_logs/recurrent-split-0/epoch=22-val_acc=0.63.ckpt"
 # )
 model = TransformerSAModel.load_from_checkpoint(
-    "lightning_logs/transformer_final/final_epoch=37-val_acc=0.62.ckpt"
+    "lightning_logs/transformer_final/final_epoch=27-val_acc=0.66.ckpt"
 )
 model.eval()
 

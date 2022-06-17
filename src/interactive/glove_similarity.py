@@ -49,6 +49,31 @@ class Word2VecExperiment:
             print(f"\\textbf{{{k}}} & {' & '.join(v)}" + "\\\\")
 
 
+class BPEExperiment:
+    def __init__(self) -> None:
+        self.word_vectors = gensim.models.KeyedVectors.load_word2vec_format(
+            "~/Downloads/data/en/en.wiki.bpe.vs5000.d50.w2v.bin", binary=True
+        )
+
+    def get_closest(self, word: str, n: int = 5) -> list[str]:
+        return [t[0] for t in self.word_vectors.similar_by_key(word)[:n]]
+
+    def run(self):
+
+        demo_words = ["stock", "buy", "money", "company"]
+
+        data = {}
+
+        for word in demo_words:
+            most_similar = [t[0] for t in self.word_vectors.similar_by_key(word)[:5]]
+            data.update({word: most_similar})
+        print(data)
+        for k, v in data.items():
+            print(f"\\textbf{{{k}}} & {' & '.join(v)}" + "\\\\")
+
+
+#%%
+# BPEExperiment().run()
 #%%
 word2vec = Word2VecExperiment()
 

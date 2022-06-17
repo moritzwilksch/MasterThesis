@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import torchmetrics
 from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
-from regex import R
 
 from src.dl_modeling.data import TweetDataModule
 
@@ -95,12 +94,12 @@ class RecurrentSAModel(BaseDLModel):
 
 class TransformerSAModel(BaseDLModel):
     BEST_PARAMS = {
-        "dim_ff": 241,
-        "dropout": 0.18409452359591996,
-        "embedding_dim": 105,
-        "hidden_dim": 249,
-        "token_dropout": 0.463518938835938,
-    }  # Val AUC = 0.81899, Test AUC = 0.8005475221900585
+        "dim_ff": 140,
+        "dropout": 0.28603031004494467,
+        "embedding_dim": 72,
+        "hidden_dim": 237,
+        "token_dropout": 0.4387140736539719,
+    }  # Val AUC = 0.81488 Test AUC = 0.80826
 
     def __init__(
         self,
@@ -195,7 +194,7 @@ if __name__ == "__main__":
     # trainer
     trainer = ptl.Trainer(
         logger=tb_logger,
-        max_epochs=10,
+        max_epochs=50,
         log_every_n_steps=50,
         # auto_lr_find=True,
     )
