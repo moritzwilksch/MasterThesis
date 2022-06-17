@@ -22,9 +22,18 @@ class BaseDLModel(ABC, ptl.LightningModule):
         self.save_hyperparameters()
         self.train_accuracy = torchmetrics.Accuracy()
         self.val_accuracy = torchmetrics.Accuracy()
+        self.val_auc = torchmetrics.AUROC(num_classes=3)
 
 
 class RecurrentSAModel(BaseDLModel):
+    BEST_PARAMS = {
+        "dropout": 0.4137700949108063,
+        "embedding_dim": 54,
+        "gru_hidden_dim": 44,
+        "hidden_dim": 189,
+        "token_dropout": 0.49831147449844915,
+    }  # val-auc: 0.7950535820672638, 
+
     def __init__(
         self,
         vocab_size: int,
@@ -81,7 +90,9 @@ class RecurrentSAModel(BaseDLModel):
         y_hat = self.forward(x, seq_lens)
         loss = F.cross_entropy(y_hat, y)
         self.val_accuracy(y_hat, y)
+        self.val_auc(y_hat, y)
         self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_auc", self.val_auc, prog_bar=True, batch_size=BATCH_SIZE)
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):
@@ -132,9 +143,7 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         # x = x + self.pos_encodings(x)
         x = torch.swapaxes(x, 0, 1)
-        x = self.pos_encodings(
-            x
-        )  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)
@@ -164,7 +173,9 @@ class TransformerSAModel(BaseDLModel):
         y_hat = self.forward(x, masks)
         loss = F.cross_entropy(y_hat, y)
         self.val_accuracy(y_hat, y)
+        self.val_auc(y_hat, y)
         self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_auc", self.val_auc, prog_bar=True, batch_size=BATCH_SIZE)
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):

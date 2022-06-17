@@ -94,3 +94,10 @@ times_taken = [
     4.7905046719824895,
     4.636190634046216,
 ]
+
+# --------------------------------------------
+[TransformerNN]
+test_scores = [0.8137341434342898]  # no outer CV :(
+
+[RecurrentNN]
+test_scores = [0.8035036903248219]  # no outer CV :(

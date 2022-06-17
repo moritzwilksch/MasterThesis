@@ -133,14 +133,14 @@ def retrain_best_model():
     # callbacks
     checkpoint_callback = ptl.callbacks.ModelCheckpoint(
         save_top_k=1,
-        monitor="val_loss",
-        mode="min",
+        monitor="val_auc",
+        mode="max",
         dirpath=f"lightning_logs/transformer_final",
         filename="final_{epoch:02d}-{val_acc:.2f}",
     )
 
     early_stopping_callback = ptl.callbacks.EarlyStopping(
-        monitor="val_loss", mode="min", patience=10
+        monitor="val_auc", mode="max", patience=10
     )
 
     # trainer

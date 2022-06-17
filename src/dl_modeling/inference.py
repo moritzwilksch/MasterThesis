@@ -16,15 +16,15 @@ prepper = Preprocessor()
 #     "lightning_logs/recurrent-split-0/epoch=22-val_acc=0.63.ckpt"
 # )
 model = TransformerSAModel.load_from_checkpoint(
-    "lightning_logs/transformer_final/final_epoch=26-val_acc=0.67.ckpt"
+    "outputs/models/transformer_final.ckpt"
 )
 model.eval()
 
 
 #%%
 s = "short $TSLA, buy puts"
-s = "long $TSLA, buy calls"
-# s = "$OXY just laid off 40% of staff"
+# s = "long $TSLA, buy calls"
+s = "$OXY just laid off 40% of staff"
 
 df = prepper.process(pl.DataFrame({"text": [s]}))
 # x = torch.Tensor(data.vocab(data.tokenizer(df["text"][0]))).long().reshape(-1, 1)

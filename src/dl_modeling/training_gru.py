@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import optuna
 import pytorch_lightning as ptl
@@ -99,12 +100,78 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    study = optuna.create_study(
-        storage="sqlite:///tuning/dl_optuna_gru.db",
-        study_name=f"GRU",
-        direction="maximize",
-        load_if_exists=True,
+    # study = optuna.create_study(
+    #     storage="sqlite:///tuning/dl_optuna_gru.db",
+    #     study_name=f"GRU",
+    #     direction="maximize",
+    #     load_if_exists=True,
+    # )
+
+    # study.optimize(objective, n_trials=50)
+    # objective(trial=None)  # one manual run for testing a model
+
+#%%
+def retrain_best_model():
+    data = TweetDataModule(
+        split_idx="retrain", batch_size=BATCH_SIZE, model_type="recurrent"
     )
 
-    study.optimize(objective, n_trials=50)
-    # objective(trial=None)  # one manual run for testing a model
+    train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
+
+    model = RecurrentSAModel(
+        vocab_size=3_000, **RecurrentSAModel.BEST_PARAMS
+    )
+
+    tb_logger = TensorBoardLogger("lightning_logs", name=f"gru_final")
+
+    # callbacks
+    checkpoint_callback = ptl.callbacks.ModelCheckpoint(
+        save_top_k=1,
+        monitor="val_auc",
+        mode="max",
+        dirpath=f"lightning_logs/gru_final",
+        filename="final_{epoch:02d}-{val_acc:.2f}",
+    )
+
+    early_stopping_callback = ptl.callbacks.EarlyStopping(
+        monitor="val_auc", mode="max", patience=10
+    )
+
+    # trainer
+    trainer = ptl.Trainer(
+        logger=tb_logger,
+        max_epochs=50,
+        log_every_n_steps=50,
+        auto_lr_find=False,
+        callbacks=[checkpoint_callback, early_stopping_callback],
+    )
+
+    trainer.fit(
+        model,
+        train_dataloaders=train_dataloader,
+        val_dataloaders=mini_val_dataloader,
+    )
+
+    # load best and calculate test AUC
+    best_model_path = trainer.checkpoint_callback.best_model_path
+    print(best_model_path)
+
+    model = RecurrentSAModel.load_from_checkpoint(best_model_path)
+    model.eval()
+
+    test = data.test_dataloader()
+
+    # create test-set predictions
+    batched_preds = trainer.predict(model, test)
+    preds = torch.vstack(batched_preds)
+
+    # we need to extract the test-set labels from the dataloader
+    ytest_true = []
+    for _, _, y in data.test_dataloader():
+        ytest_true.append(y.numpy())
+    ytest_true = np.concatenate(ytest_true)
+
+    print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
+
+
+retrain_best_model()
