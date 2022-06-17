@@ -8,7 +8,8 @@ import torch.nn.functional as F
 import torchmetrics
 from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
-from transformers import pipeline, AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, pipeline
+
 from src.dl_modeling.data import TweetDataModule
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
@@ -185,7 +186,7 @@ class BERTSAModel(BaseDLModel):
         lr: float = 1e-3,
     ):
         super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")  
+        self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
         # layers
         self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
@@ -199,9 +200,13 @@ class BERTSAModel(BaseDLModel):
 
     def forward(self, x):
 
-        inputs = self.tokenizer(list(x), return_tensors="pt", padding=True, truncation=True)
+        inputs = self.tokenizer(
+            list(x), return_tensors="pt", padding=True, truncation=True
+        )
         x = self.bert(**inputs).last_hidden_state
-        x = torch.mean(x, dim=1).detach()  # batch_first==True, so dim=1 averages out sequence length
+        x = torch.mean(
+            x, dim=1
+        ).detach()  # batch_first==True, so dim=1 averages out sequence length
 
         # x = self.hidden1(x)
         # x = F.relu(x)
