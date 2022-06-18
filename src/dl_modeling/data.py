@@ -30,7 +30,9 @@ class TweetDataSet(torch.utils.data.Dataset):
 
 
 class TweetDataModule(ptl.LightningDataModule):
-    def __init__(self, split_idx, batch_size: int, model_type: str = "recurrent"):
+    def __init__(
+        self, split_idx, batch_size: int, model_type: str = "recurrent", all_data=None
+    ):
         super().__init__()
         if split_idx == "retrain":
             RETRAIN = True
@@ -50,6 +52,11 @@ class TweetDataModule(ptl.LightningDataModule):
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
+
+        # Override for benchmarking on FinSoMe
+        if all_data is not None:
+            self.all_data = all_data
+
         self.all_data = self.all_data.with_column(
             pl.when(pl.col("label") == "0")
             .then(pl.lit("2"))
@@ -143,6 +150,14 @@ class TweetDataModule(ptl.LightningDataModule):
         )
 
         return train_dataloader, val_dataloader
+
+    def all_dataloader(self):
+        return torch.utils.data.DataLoader(
+            TweetDataSet(self.all_data),
+            batch_size=1024,
+            collate_fn=self.collate_fn_to_use,
+            num_workers=2,
+        )
 
     def get_tokenizer_for_split(self):
         tokenizer = get_tokenizer("basic_english")

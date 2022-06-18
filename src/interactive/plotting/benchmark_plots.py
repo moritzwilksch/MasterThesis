@@ -12,8 +12,12 @@ OURS = ["LogReg", "SVM", "TransformerNN", "RecurrentNN"]
 PRETRAINED = ["FinBERT", "TwitterRoBERTa", "VADER", "NTUSD-Fin"]
 #%%
 data = toml.load("outputs/static/model_test_scores.toml")
-
 scores = pd.DataFrame({k: data[k]["test_scores"] for k in data})
+
+finsome_data = toml.load("outputs/static/model_scores_on_finsome.toml")
+finsome_scores = pd.DataFrame(
+    {k: finsome_data[k]["finsome_score"] for k in finsome_data}
+)
 
 times = pd.DataFrame({k: data[k]["times_taken"] for k in data})
 times = times / 2000 * 1000  # per-sample in ms!!!
@@ -25,7 +29,8 @@ def plot_scores(score_df, ax):
         data=scores_melted,
         x="model",
         y="score",
-        order=score_df.mean().sort_values().index,
+        order=score_df[PRETRAINED].mean().sort_values().index.to_list()
+        + score_df[OURS].mean().sort_values().index.to_list(),
         palette=[Colors.YELLOW.value] * len(PRETRAINED)
         + [Colors.DARKBLUE.value] * len(OURS),
         linestyles=":",
@@ -38,8 +43,8 @@ def plot_scores(score_df, ax):
     )
 
     ax.plot(
-        score_df.mean().sort_values().index[: len(PRETRAINED)],
-        score_df.mean().sort_values().values[: len(PRETRAINED)],
+        score_df[PRETRAINED].mean().sort_values().index,
+        score_df[PRETRAINED].mean().sort_values().values,
         color=Colors.YELLOW.value,
         ls="-",
         lw=3,
@@ -48,8 +53,8 @@ def plot_scores(score_df, ax):
     )
 
     ax.plot(
-        score_df.mean().sort_values().index[len(PRETRAINED) :],
-        score_df.mean().sort_values().values[len(PRETRAINED) :],
+        score_df[OURS].mean().sort_values().index,
+        score_df[OURS].mean().sort_values().values,
         color=Colors.DARKBLUE.value,
         ls="-",
         lw=3,
@@ -185,4 +190,25 @@ sns.despine(bottom=True)
 plt.tight_layout()
 fig.savefig(
     "outputs/plots/model_inference_time.pdf", bbox_inches="tight", facecolor="white"
+)
+
+
+#%%
+fig, ax = plt.subplots(figsize=(15, 5))
+plot_scores(finsome_scores, ax)
+
+ax.set_ylim(0.49, 0.86)
+ax.set_ylabel("ROC AUC on FinSoMe", labelpad=15, weight="bold")
+ax.tick_params(axis="x", length=0)
+ax.set_xlim(-0.25, 7.25)
+ax.set_xlabel("Model", weight="bold", labelpad=15)
+ax.grid(axis="y", ls="--", color="black", alpha=0.25)
+
+sns.despine(bottom=True)
+plt.tight_layout()
+
+fig.savefig(
+    "outputs/plots/model_performance_finsome.pdf",
+    bbox_inches="tight",
+    facecolor="white",
 )

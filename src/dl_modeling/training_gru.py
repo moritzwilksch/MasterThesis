@@ -118,9 +118,7 @@ def retrain_best_model():
 
     train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
 
-    model = RecurrentSAModel(
-        vocab_size=3_000, **RecurrentSAModel.BEST_PARAMS
-    )
+    model = RecurrentSAModel(vocab_size=3_000, **RecurrentSAModel.BEST_PARAMS)
 
     tb_logger = TensorBoardLogger("lightning_logs", name=f"gru_final")
 

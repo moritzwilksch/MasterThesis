@@ -1,14 +1,17 @@
 #%%
+import time
+
 import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             roc_auc_score)
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
 from src.utils.preprocessing import Preprocessor
-import time
+
 #%%
 USE_MODEL = "recurrent"
 
@@ -21,9 +24,7 @@ if USE_MODEL == "transformer":
     model.eval()
 else:
     data = TweetDataModule(split_idx="retrain", batch_size=64, model_type="recurrent")
-    model = RecurrentSAModel.load_from_checkpoint(
-        "outputs/models/gru_final.ckpt"
-    )
+    model = RecurrentSAModel.load_from_checkpoint("outputs/models/gru_final.ckpt")
 
 #%%
 # s = "short $TSLA, buy puts"
@@ -46,7 +47,9 @@ tic = time.perf_counter()
 batched_preds = trainer.predict(model, test)
 tac = time.perf_counter()
 
-time_taken = tac - tic  # to make comparable: this should be inference time for 2_000 samples
+time_taken = (
+    tac - tic
+)  # to make comparable: this should be inference time for 2_000 samples
 time_taken / len(data.ytest) * 2_000
 print(f"Prediction time for 2000 samples: {tac - tic}")
 

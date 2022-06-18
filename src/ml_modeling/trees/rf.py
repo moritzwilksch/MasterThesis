@@ -1,11 +1,12 @@
 #%%
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 import polars as pl
-from src.utils.preprocessing import Preprocessor
-from sklearn.metrics import roc_auc_score, make_scorer
+from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
+
+from src.utils.preprocessing import Preprocessor
 
 #%%
 
@@ -30,7 +31,12 @@ pyfin_senti_data = pyfin_senti_data.to_pandas()
 model = Pipeline(
     [
         ("vectorizer", TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4))),
-        ("model", RandomForestClassifier(n_estimators=100, min_samples_leaf=3, class_weight="balanced")),
+        (
+            "model",
+            RandomForestClassifier(
+                n_estimators=100, min_samples_leaf=3, class_weight="balanced"
+            ),
+        ),
     ]
 )
 

@@ -4,8 +4,12 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 import polars as pl
-from black import Mode
+import pytorch_lightning as ptl
+import torch
+from sklearn.metrics import accuracy_score, roc_auc_score
 
+from src.dl_modeling.data import TweetDataModule, TweetDataSet
+from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
 from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
                                         NTUSDMeBenchmark,
                                         TwitterRoBERTaBenchmark,
@@ -70,11 +74,13 @@ class Model(Enum):
     FINBERT = "finbert"
     TWITTER_ROBERTA = "twitter_roberta"
     NTUSD = "ntusd"
+    RECURRENTNN = "recurrentnn"
+    TRANSFORMERNN = "transformernn"
 
 
 ########################
-DATASET = Dataset.PYFIN_SENTI
-MODEL = Model.SVM
+DATASET = Dataset.FINSOME
+MODEL = Model.RECURRENTNN
 ########################
 
 if DATASET == Dataset.FINSOME:
@@ -117,6 +123,47 @@ if MODEL == Model.TWITTER_ROBERTA:
 if MODEL == Model.NTUSD:
     ntusd = NTUSDMeBenchmark(data, path_to_ntusd_folder="data/NTUSD-Fin")
     test_scores, times_taken = ntusd.load()
+
+if MODEL == Model.RECURRENTNN:
+    if DATASET == Dataset.PYFIN_SENTI:
+        raise ValueError("Do not run inference on the data we trained on!")
+
+    model = RecurrentSAModel.load_from_checkpoint("outputs/models/gru_final.ckpt")
+    dataset = TweetDataModule(
+        "retrain",
+        batch_size=512,
+        all_data=pl.from_pandas(data).with_column(pl.col("label").cast(pl.Utf8)),
+    )
+    trainer = ptl.Trainer()
+    batched_preds = trainer.predict(model, dataset.all_dataloader())
+    preds = torch.vstack(batched_preds).detach().numpy()
+
+    test_scores = [
+        roc_auc_score(data["label"].astype("int") - 1, preds, multi_class="ovr")
+    ]
+    times_taken = "N/A"
+
+if MODEL == Model.TRANSFORMERNN:
+    if DATASET == Dataset.PYFIN_SENTI:
+        raise ValueError("Do not run inference on the data we trained on!")
+
+    model = TransformerSAModel.load_from_checkpoint(
+        "outputs/models/transformer_final.ckpt"
+    )
+    dataset = TweetDataModule(
+        "retrain",
+        batch_size=512,
+        all_data=pl.from_pandas(data).with_column(pl.col("label").cast(pl.Utf8)),
+        model_type="transformer",
+    )
+    trainer = ptl.Trainer()
+    batched_preds = trainer.predict(model, dataset.all_dataloader())
+    preds = torch.vstack(batched_preds).detach().numpy()
+
+    test_scores = [
+        roc_auc_score(data["label"].astype("int") - 1, preds, multi_class="ovr")
+    ]
+    times_taken = "N/A"
 
 
 print(test_scores)

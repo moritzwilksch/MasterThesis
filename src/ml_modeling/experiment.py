@@ -82,7 +82,11 @@ class Experiment:
                 roc_auc_score(test_data["label"], preds, multi_class="ovr")
             )
 
-            print(classification_report(test_data["label"].astype("int"), preds.argmax(axis=1) + 1))
+            print(
+                classification_report(
+                    test_data["label"].astype("int"), preds.argmax(axis=1) + 1
+                )
+            )
 
         return val_scores, test_scores, best_params, times_taken
 

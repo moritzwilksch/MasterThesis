@@ -1,0 +1,23 @@
+[FinBERT]
+finsome_score = [0.7101408414324485]
+
+[TwitterRoBERTa]
+finsome_score = [0.7046650522228829]
+
+[LogReg]
+finsome_score = [0.7263623172330559]
+
+[VADER]
+finsome_score = [0.5909699429293709]
+
+[NTUSD-Fin]
+finsome_score = [0.5990336854997421]
+
+[SVM]
+finsome_score = [0.7265936175362881]
+
+[TransformerNN]
+finsome_score = [0.7065014316463024]
+
+[RecurrentNN]
+finsome_score = [0.7092727667441329]

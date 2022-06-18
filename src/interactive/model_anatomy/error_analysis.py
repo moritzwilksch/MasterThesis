@@ -1,8 +1,9 @@
 #%%
 import joblib
 import pandas as pd
-from src.utils.preprocessing import Preprocessor
 import polars as pl
+
+from src.utils.preprocessing import Preprocessor
 
 #%%
 model = joblib.load("outputs/models/final_LogisticRegressionModel.gz")
