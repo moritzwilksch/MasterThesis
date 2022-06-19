@@ -198,7 +198,7 @@ fig, ax = plt.subplots(figsize=(15, 5))
 plot_scores(finsome_scores, ax)
 
 ax.set_ylim(0.49, 0.86)
-ax.set_ylabel("ROC AUC on FinSoMe", labelpad=15, weight="bold")
+ax.set_ylabel("ROC AUC on Fin-SoMe", labelpad=15, weight="bold")
 ax.tick_params(axis="x", length=0)
 ax.set_xlim(-0.25, 7.25)
 ax.set_xlabel("Model", weight="bold", labelpad=15)

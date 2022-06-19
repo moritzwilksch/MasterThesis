@@ -79,8 +79,8 @@ class Model(Enum):
 
 
 ########################
-DATASET = Dataset.FINSOME
-MODEL = Model.RECURRENTNN
+DATASET = Dataset.PYFIN_SENTI
+MODEL = Model.LOGISTIC_REGRESSION
 ########################
 
 if DATASET == Dataset.FINSOME:
@@ -93,7 +93,7 @@ print(f"Benchmark: {MODEL.value} on {DATASET.value}")
 if MODEL == Model.LOGISTIC_REGRESSION:
     experiment = Experiment("LogisticRegression", LogisticRegressionModel, data)
     if DATASET == DATASET.PYFIN_SENTI:
-        experiment.fit_final_best_model(data)
+        # experiment.fit_final_best_model(data)
         val_scores, test_scores, best_params, times_taken = experiment.load()
     else:
         test_scores = experiment.apply_to_other_data(finsome)
