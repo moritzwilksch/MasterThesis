@@ -12,6 +12,7 @@ outputs/models/*
 lightning_logs/*
 outputs/tokenizers/*
 data/representations*
+mlruns/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
