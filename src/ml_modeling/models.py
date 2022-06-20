@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
+from lightgbm import LGBMClassifier
 
 import numpy as np
 import optuna
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import KFold, cross_val_score
@@ -209,6 +211,70 @@ class SVMModel(BaseSklearnSAModel):
             "vectorizer__min_df": trial.suggest_float(
                 "vectorizer__min_df", 1e-6, 1, log=True
             ),
+        }
+
+        params = self.add_ngram_range_tuple_to_params(trial, params)
+
+        pipe = self.get_pipeline()
+        pipe.set_params(**params)  # set chosen hyperparameters
+
+        score = cross_val_score(
+            pipe,
+            X=self.train_val_data["text"],
+            y=self.train_val_data["label"],
+            cv=self.kfold,
+            scoring=make_scorer(roc_auc_score, needs_proba=True, multi_class="ovr"),
+            n_jobs=5,
+        )
+        return score.mean()
+
+
+class LGBMModel(BaseSklearnSAModel):
+    # this is the final model based on nested CV
+    FINAL_BEST_PARAMS = {
+        "kbest__k": 9000,
+        "model__max_bin": 129,
+        "model__min_data_in_leaf": 2,
+        "model__num_leaves": 56,
+        "vectorizer__analyzer": "char_wb",
+        "vectorizer__ngram_range": (4, 4),
+    }
+
+    def __init__(self, split_idx, train_val_data):
+        super().__init__("LGBM", split_idx=split_idx, train_val_data=train_val_data)
+
+    def get_pipeline(self):
+        """Overrides BaseSklearnSAModel.get_pipeline()"""
+
+        return Pipeline(
+            [
+                (
+                    "vectorizer",
+                    TfidfVectorizer(),  # params will be set later
+                ),
+                ("kbest", SelectKBest()),
+                (
+                    "model",
+                    LGBMClassifier(random_state=42, n_jobs=3),
+                ),
+            ],
+        )
+
+    def optuna_trial(self, trial):
+        """Overrides BaseSklearnSAModel.optuna_trial()"""
+        params = {
+            "model__num_leaves": trial.suggest_int("model__num_leaves", 2, 100),
+            "model__max_bin": trial.suggest_int("model__max_bin", 8, 512),
+            "model__min_data_in_leaf": trial.suggest_int(
+                "model__min_data_in_leaf", 2, 256
+            ),
+            "vectorizer__analyzer": trial.suggest_categorical(
+                "vectorizer__analyzer", ["char_wb", "word"]
+            ),
+            # "vectorizer__min_df": trial.suggest_float(
+            #     "vectorizer__min_df", 1e-6, 1, log=True
+            # ),
+            "kbest__k": trial.suggest_int("kbest__k", 1000, 9_000, 1000),
         }
 
         params = self.add_ngram_range_tuple_to_params(trial, params)

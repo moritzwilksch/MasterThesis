@@ -34,7 +34,7 @@ class BertTensorDataSet(torch.utils.data.Dataset):
     def __init__(self):
         tensors = []
         for ii in range(20):
-            tensors.append(torch.load(f"data/representations_{ii}.pt"))
+            tensors.append(torch.load(f"data/distilbert/representations_{ii}.pt"))
         self.all_data = torch.cat(tensors, dim=0).clone().detach()
         self.labels = (
             pl.read_parquet("data/labeled/labeled_tweets.parquet")["label"]

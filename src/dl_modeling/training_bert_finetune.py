@@ -37,14 +37,14 @@ if __name__ == "__main__":
             # callbacks
             checkpoint_callback = ptl.callbacks.ModelCheckpoint(
                 save_top_k=1,
-                monitor="val_loss",
-                mode="min",
+                monitor="val_auc",
+                mode="max",
                 dirpath=f"lightning_logs/bert-split-{split_idx}",
                 filename="{epoch:02d}-{val_acc:.2f}",
             )
 
             early_stopping_callback = ptl.callbacks.EarlyStopping(
-                monitor="val_loss", mode="min", patience=10
+                monitor="val_auc", mode="max", patience=10
             )
 
             # trainer
@@ -87,14 +87,14 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    study = optuna.create_study(
-        storage="sqlite:///tuning/dl_optuna_bert.db",
-        study_name=f"BERT",
-        direction="maximize",
-        load_if_exists=True,
-    )
+    # study = optuna.create_study(
+    #     storage="sqlite:///tuning/dl_optuna_bert.db",
+    #     study_name=f"BERT",
+    #     direction="maximize",
+    #     load_if_exists=True,
+    # )
 
-    study.optimize(objective, n_trials=50)
+    # study.optimize(objective, n_trials=50)
 
     # objective(trial=None)  # one manual run
 
@@ -114,14 +114,14 @@ def retrain_best_model():
     # callbacks
     checkpoint_callback = ptl.callbacks.ModelCheckpoint(
         save_top_k=1,
-        monitor="val_loss",
-        mode="min",
+        monitor="val_auc",
+        mode="max",
         dirpath=f"lightning_logs/bert_final",
         filename="final_{epoch:02d}-{val_acc:.2f}",
     )
 
     early_stopping_callback = ptl.callbacks.EarlyStopping(
-        monitor="val_loss", mode="min", patience=10
+        monitor="val_auc", mode="max", patience=10
     )
 
     # trainer

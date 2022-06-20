@@ -7,7 +7,7 @@ import polars as pl
 from sklearn.linear_model import LogisticRegression
 
 from src.ml_modeling.experiment import Experiment
-from src.ml_modeling.models import LogisticRegressionModel, SVMModel
+from src.ml_modeling.models import LogisticRegressionModel, SVMModel, LGBMModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
 
@@ -45,8 +45,8 @@ df = df.to_pandas()
 # experiment.run(n_trials=100)
 
 
-experiment = Experiment("LogisticRegressionNew", LogisticRegressionModel, df)
-# experiment.run(n_trials=100)
+experiment = Experiment("LGBM", LGBMModel, df)
+experiment.run(n_trials=100)
 
 #%%
 val_scores, test_scores, best_params, times_taken = experiment.load()

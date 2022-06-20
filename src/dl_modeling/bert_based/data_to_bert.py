@@ -26,5 +26,5 @@ for idx, batch in enumerate(np.array_split(df, 20)):
         truncation=True,
     )
     out = model(**tokens).last_hidden_state
-    representations = torch.mean(out, dim=1)
-    torch.save(representations, f"data/representations_{idx}.pt")
+    representations = out[:, 0, :] #torch.mean(out, dim=1)
+    torch.save(representations, f"data/distilbert/clstoken_representations_{idx}.pt")

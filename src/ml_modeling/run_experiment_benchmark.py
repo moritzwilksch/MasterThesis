@@ -9,7 +9,7 @@ import torch
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule, TweetDataSet
-from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
+from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel, BERTSAModel
 from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
                                         NTUSDMeBenchmark,
                                         TwitterRoBERTaBenchmark,
@@ -76,6 +76,7 @@ class Model(Enum):
     NTUSD = "ntusd"
     RECURRENTNN = "recurrentnn"
     TRANSFORMERNN = "transformernn"
+    BERTBASED = "bertbased"
 
 
 ########################
