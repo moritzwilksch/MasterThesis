@@ -37,14 +37,14 @@ if __name__ == "__main__":
             # callbacks
             checkpoint_callback = ptl.callbacks.ModelCheckpoint(
                 save_top_k=1,
-                monitor="val_auc",
-                mode="max",
+                monitor="val_loss",
+                mode="min",
                 dirpath=f"lightning_logs/bert-split-{split_idx}",
                 filename="{epoch:02d}-{val_acc:.2f}",
             )
 
             early_stopping_callback = ptl.callbacks.EarlyStopping(
-                monitor="val_auc", mode="max", patience=10
+                monitor="val_loss", mode="min", patience=10
             )
 
             # trainer
@@ -65,20 +65,20 @@ if __name__ == "__main__":
             model = BERTSAModel.load_from_checkpoint(best_model_path)
             model.eval()
 
-            test = datamodule.test_dataloader()
+            val = datamodule.val_dataloader()
 
-            # create test-set predictions
-            batched_preds = trainer.predict(model, test)
+            # create val-set predictions
+            batched_preds = trainer.predict(model, val)
             preds = torch.vstack(batched_preds)
 
-            # we need to extract the test-set labels from the dataloader
-            ytest_true = []
-            for _, y in datamodule.test_dataloader():
-                ytest_true.append(y.numpy())
-            ytest_true = np.concatenate(ytest_true)
+            # we need to extract the val-set labels from the dataloader
+            yval_true = []
+            for _, y in datamodule.val_dataloader():
+                yval_true.append(y.numpy())
+            yval_true = np.concatenate(yval_true)
 
             aucs_per_split.append(
-                roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr")
+                roc_auc_score(yval_true, preds.numpy(), multi_class="ovr")
             )
             print(f"Split {split_idx} AUCs: {aucs_per_split}")
 
@@ -100,29 +100,28 @@ if __name__ == "__main__":
 
 
 def retrain_best_model():
-    data = TweetDataModule(
-        split_idx="retrain", batch_size=BATCH_SIZE, model_type="transformer"
-    )
+    datamodule = BERTTensorDataModule(split_idx="refit")
 
-    train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
+    (
+        train_dataloader,
+        mini_val_dataloader,
+    ) = datamodule.trainval_dataloader_for_retraining()
 
-    model = TransformerSAModel(
-        vocab_size=3_000, nhead=1, **TransformerSAModel.BEST_PARAMS
-    )
+    model = BERTSAModel(**BERTSAModel.BEST_PARAMS)
 
-    tb_logger = TensorBoardLogger("lightning_logs", name=f"transformer_final")
+    tb_logger = TensorBoardLogger("lightning_logs", name=f"bert_final")
 
     # callbacks
     checkpoint_callback = ptl.callbacks.ModelCheckpoint(
         save_top_k=1,
-        monitor="val_auc",
-        mode="max",
-        dirpath=f"lightning_logs/transformer_final",
+        monitor="val_loss",
+        mode="min",
+        dirpath=f"lightning_logs/bert_final",
         filename="final_{epoch:02d}-{val_acc:.2f}",
     )
 
     early_stopping_callback = ptl.callbacks.EarlyStopping(
-        monitor="val_auc", mode="max", patience=10
+        monitor="val_loss", mode="min", patience=10
     )
 
     # trainer
@@ -144,10 +143,10 @@ def retrain_best_model():
     best_model_path = trainer.checkpoint_callback.best_model_path
     print(best_model_path)
 
-    model = TransformerSAModel.load_from_checkpoint(best_model_path)
+    model = BERTSAModel.load_from_checkpoint(best_model_path)
     model.eval()
 
-    test = data.test_dataloader()
+    test = datamodule.test_dataloader()
 
     # create test-set predictions
     batched_preds = trainer.predict(model, test)
@@ -155,11 +154,11 @@ def retrain_best_model():
 
     # we need to extract the test-set labels from the dataloader
     ytest_true = []
-    for _, _, y in data.test_dataloader():
+    for _, y in datamodule.test_dataloader():
         ytest_true.append(y.numpy())
     ytest_true = np.concatenate(ytest_true)
 
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-# retrain_best_model()
+retrain_best_model()

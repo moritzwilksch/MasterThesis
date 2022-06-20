@@ -72,8 +72,8 @@ class BERTTensorDataModule(ptl.LightningDataModule):
         for split_idx, (train_idx, val_idx) in enumerate(
             self.kfold.split(self.trainval_idxs)
         ):
-            self.split_idxs_train[split_idx] = train_idx
-            self.split_idxs_val[split_idx] = val_idx
+            self.split_idxs_train[split_idx] = self.trainval_idxs[train_idx]
+            self.split_idxs_val[split_idx] = self.trainval_idxs[val_idx]
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(
@@ -87,18 +87,28 @@ class BERTTensorDataModule(ptl.LightningDataModule):
 
     def val_dataloader(self):
         return torch.utils.data.DataLoader(
-            self.dataset,
-            batch_size=64,
-            sampler=torch.utils.data.SubsetRandomSampler(
-                self.split_idxs_val[self.split_idx]
-            ),
-            num_workers=1,
+            torch.utils.data.Subset(self.dataset, self.split_idxs_val[self.split_idx]),
+            batch_size=1024,
         )
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(
             torch.utils.data.Subset(self.dataset, self.test_idxs),
             batch_size=1024,
+        )
+
+    def trainval_dataloader_for_retraining(self):
+        train_idxs, val_idxs = train_test_split(self.trainval_idxs, test_size=0.1, shuffle=True)
+        return torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            sampler=torch.utils.data.SubsetRandomSampler(train_idxs),
+            num_workers=4,
+        ), torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=self.batch_size,
+            sampler=torch.utils.data.SubsetRandomSampler(val_idxs),
+            num_workers=1,
         )
 
 
@@ -156,8 +166,8 @@ class TweetDataModule(ptl.LightningDataModule):
         for split_idx, (train_idx, val_idx) in enumerate(
             self.kfold.split(self.xtrainval)
         ):
-            self.split_idxs_train[split_idx] = train_idx
-            self.split_idxs_val[split_idx] = val_idx
+            self.split_idxs_train[split_idx] = self.trainval_idxs[train_idx]
+            self.split_idxs_val[split_idx] = self.trainval_idxs[val_idx]
 
         # for text processing, set tokenizer and vocab built on train split
         # self.tokenizer, self.vocab = self.get_tokenizer_for_split()

@@ -189,7 +189,7 @@ class TransformerSAModel(BaseDLModel):
 
 
 class BERTSAModel(BaseDLModel):
-    BEST_PARAMS = {}
+    BEST_PARAMS = {'dropout': 0.23636360794466402, 'hidden_dim': 239}
 
     def __init__(
         self,
