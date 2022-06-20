@@ -35,7 +35,7 @@ class BertTensorDataSet(torch.utils.data.Dataset):
         tensors = []
         for ii in range(20):
             tensors.append(torch.load(f"data/representations_{ii}.pt"))
-        self.all_data = torch.vstack(tensors)
+        self.all_data = torch.cat(tensors, dim=0).clone().detach()
         self.labels = (
             pl.read_parquet("data/labeled/labeled_tweets.parquet")["label"]
             .to_pandas()
@@ -51,10 +51,11 @@ class BertTensorDataSet(torch.utils.data.Dataset):
 
 
 class BERTTensorDataModule(ptl.LightningDataModule):
-    def __init__(self, split_idx):
+    def __init__(self, split_idx, batch_size: int = 64):
         super().__init__()
         self.dataset = BertTensorDataSet()
         self.split_idx = split_idx
+        self.batch_size = batch_size
 
         self.trainval_idxs, self.test_idxs = train_test_split(
             np.arange(len(self.dataset)),
@@ -77,10 +78,11 @@ class BERTTensorDataModule(ptl.LightningDataModule):
     def train_dataloader(self):
         return torch.utils.data.DataLoader(
             self.dataset,
-            batch_size=64,
+            batch_size=self.batch_size,
             sampler=torch.utils.data.SubsetRandomSampler(
                 self.split_idxs_train[self.split_idx]
             ),
+            num_workers=4,
         )
 
     def val_dataloader(self):
@@ -90,6 +92,7 @@ class BERTTensorDataModule(ptl.LightningDataModule):
             sampler=torch.utils.data.SubsetRandomSampler(
                 self.split_idxs_val[self.split_idx]
             ),
+            num_workers=1,
         )
 
     def test_dataloader(self):

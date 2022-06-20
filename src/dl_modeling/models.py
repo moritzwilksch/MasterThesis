@@ -198,32 +198,16 @@ class BERTSAModel(BaseDLModel):
         lr: float = 1e-3,
     ):
         super().__init__()
-        # self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
-
-        # layers
-        # self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
-        # self.bert.eval()
-        # for param in self.bert.parameters():
-        #     param.requires_grad = False
-
-        # self.hidden1 = nn.Linear(768, hidden_dim)
-        # self.dropout2 = nn.Dropout(dropout)
-        self.output_layer = nn.Linear(768, 3)
+        self.dropout1 = nn.Dropout(dropout)
+        self.hidden1 = nn.Linear(768, hidden_dim)
+        self.dropout2 = nn.Dropout(dropout)
+        self.output_layer = nn.Linear(hidden_dim, 3)
 
     def forward(self, x):
-
-        # inputs = self.tokenizer(
-        #     list(x), return_tensors="pt", padding=True, truncation=True
-        # )
-        # x = self.bert(**inputs).last_hidden_state
-        # x = torch.mean(
-        #     x, dim=1
-        # ).detach()  # batch_first==True, so dim=1 averages out sequence length
-
-        # x = self.hidden1(x)
-        # x = F.relu(x)
-        # x = self.dropout2(x)
-
+        x = self.dropout1(x)
+        x = self.hidden1(x)
+        x = F.relu(x)
+        x = self.dropout2(x)
         x = self.output_layer(x)
 
         return x
@@ -242,7 +226,9 @@ class BERTSAModel(BaseDLModel):
         y_hat = self.forward(x)
         loss = F.cross_entropy(y_hat, y)
         self.val_accuracy(y_hat, y)
+        self.val_auc(y_hat, y)
         self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_auc", self.val_auc, prog_bar=True, batch_size=BATCH_SIZE)
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):
@@ -270,7 +256,7 @@ if __name__ == "__main__":
     #     lr=1e-3,
     # )
 
-    model = BERTSAModel(12, 0.2)
+    model = BERTSAModel(128, 0.3)
 
     # trainer
     trainer = ptl.Trainer(
