@@ -94,11 +94,8 @@ class BERTTensorDataModule(ptl.LightningDataModule):
 
     def test_dataloader(self):
         return torch.utils.data.DataLoader(
-            self.dataset,
+            torch.utils.data.Subset(self.dataset, self.test_idxs),
             batch_size=1024,
-            sampler=torch.utils.data.SubsetRandomSampler(
-                self.test_idxs
-            ),
         )
 
 
