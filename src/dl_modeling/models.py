@@ -10,7 +10,7 @@ from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
 from transformers import AutoModel, AutoTokenizer, pipeline
 
-from src.dl_modeling.data import TweetDataModule
+from src.dl_modeling.data import TweetDataModule, BertTensorDataSet, BERTTensorDataModule
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 BATCH_SIZE = 64
@@ -199,13 +199,13 @@ class BERTSAModel(BaseDLModel):
         lr: float = 1e-3,
     ):
         super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+        # self.tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
         # layers
-        self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
-        self.bert.eval()
-        for param in self.bert.parameters():
-            param.requires_grad = False
+        # self.bert = AutoModel.from_pretrained("distilbert-base-uncased")
+        # self.bert.eval()
+        # for param in self.bert.parameters():
+        #     param.requires_grad = False
 
         # self.hidden1 = nn.Linear(768, hidden_dim)
         # self.dropout2 = nn.Dropout(dropout)
@@ -213,13 +213,13 @@ class BERTSAModel(BaseDLModel):
 
     def forward(self, x):
 
-        inputs = self.tokenizer(
-            list(x), return_tensors="pt", padding=True, truncation=True
-        )
-        x = self.bert(**inputs).last_hidden_state
-        x = torch.mean(
-            x, dim=1
-        ).detach()  # batch_first==True, so dim=1 averages out sequence length
+        # inputs = self.tokenizer(
+        #     list(x), return_tensors="pt", padding=True, truncation=True
+        # )
+        # x = self.bert(**inputs).last_hidden_state
+        # x = torch.mean(
+        #     x, dim=1
+        # ).detach()  # batch_first==True, so dim=1 averages out sequence length
 
         # x = self.hidden1(x)
         # x = F.relu(x)
@@ -258,7 +258,7 @@ class BERTSAModel(BaseDLModel):
 #%%
 if __name__ == "__main__":
     tb_logger = TensorBoardLogger("lightning_logs", name=f"bertbased-split-{0}")
-    data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="bert")
+    # data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="bert")
 
     # model = TransformerSAModel(
     #     vocab_size=3_000,
@@ -293,6 +293,7 @@ if __name__ == "__main__":
 
     trainer.fit(
         model,
-        train_dataloaders=data.train_dataloader(),
-        val_dataloaders=data.val_dataloader(),
+        BERTTensorDataModule()
+        # train_dataloaders=data.train_dataloader(),
+        # val_dataloaders=data.val_dataloader(),
     )

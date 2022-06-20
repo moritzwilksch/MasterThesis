@@ -8,6 +8,7 @@ from sklearn.model_selection import KFold, train_test_split
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 
+
 from src.utils.preprocessing import Preprocessor
 
 prepper = Preprocessor()
@@ -27,6 +28,35 @@ class TweetDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         return self.data.loc[idx, "text"], int(self.data.loc[idx, "label"])
+
+class BertTensorDataSet(torch.utils.data.Dataset):
+    def __init__(self):
+        tensors = []
+        for ii in range(20):
+            tensors.append(torch.load(f"data/representations_{ii}.pt"))
+        self.all_data = torch.vstack(tensors)
+        self.labels = pl.read_parquet("data/labeled/labeled_tweets.parquet")["label"].to_pandas().map(
+            {"0": 1, "1": 0, "2": 1, "3": 2}  # off-by-one!
+        ).to_numpy()
+
+    def __len__(self):
+        return self.all_data.size(0)
+    
+    def __getitem__(self, idx):
+        return self.all_data[idx], self.labels[idx]
+
+
+class BERTTensorDataModule(ptl.LightningDataModule):
+    def __init__(self):
+        super().__init__()
+        self.dataset = BertTensorDataSet()
+        self.train_set, self.val_set = torch.utils.data.random_split(self.dataset, [8000, 2000])
+
+    def train_dataloader(self):
+        return torch.utils.data.DataLoader(self.train_set, batch_size=64)
+    
+    def val_dataloader(self):
+        return torch.utils.data.DataLoader(self.val_set, batch_size=64)
 
 
 class TweetDataModule(ptl.LightningDataModule):

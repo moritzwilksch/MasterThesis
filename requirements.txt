@@ -19,3 +19,4 @@ pytorch-lightning
 torchtext
 positional-encodings
 regex
+transformers
