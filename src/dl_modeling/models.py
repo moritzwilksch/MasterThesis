@@ -9,7 +9,8 @@ import torchmetrics
 from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
 from transformers import AutoModel, AutoTokenizer, pipeline
-
+import numpy as np
+from sklearn.metrics import roc_auc_score
 from src.dl_modeling.data import TweetDataModule, BertTensorDataSet, BERTTensorDataModule
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
@@ -143,9 +144,7 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         # x = x + self.pos_encodings(x)
         x = torch.swapaxes(x, 0, 1)
-        x = self.pos_encodings(
-            x
-        )  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)
@@ -276,7 +275,7 @@ if __name__ == "__main__":
     # trainer
     trainer = ptl.Trainer(
         logger=tb_logger,
-        max_epochs=50,
+        max_epochs=1,
         log_every_n_steps=50,
         # auto_lr_find=True,
     )
@@ -291,9 +290,31 @@ if __name__ == "__main__":
     # )
     # res.plot()
 
+    datamodule = BERTTensorDataModule(split_idx=0)
     trainer.fit(
         model,
-        BERTTensorDataModule()
+        datamodule
         # train_dataloaders=data.train_dataloader(),
         # val_dataloaders=data.val_dataloader(),
     )
+
+    # load best and calculate test AUC
+    best_model_path = trainer.checkpoint_callback.best_model_path
+    print(best_model_path)
+
+    model = BERTSAModel.load_from_checkpoint(best_model_path)
+    model.eval()
+
+    test = datamodule.test_dataloader()
+
+    # create test-set predictions
+    batched_preds = trainer.predict(model, test)
+    preds = torch.vstack(batched_preds)
+
+    # we need to extract the test-set labels from the dataloader
+    ytest_true = []
+    for _, y in datamodule.test_dataloader():
+        ytest_true.append(y.numpy())
+    ytest_true = np.concatenate(ytest_true)
+
+    print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))

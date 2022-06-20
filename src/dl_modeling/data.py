@@ -7,7 +7,7 @@ import torchtext
 from sklearn.model_selection import KFold, train_test_split
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
-
+import numpy as np
 
 from src.utils.preprocessing import Preprocessor
 
@@ -29,34 +29,77 @@ class TweetDataSet(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         return self.data.loc[idx, "text"], int(self.data.loc[idx, "label"])
 
+
 class BertTensorDataSet(torch.utils.data.Dataset):
     def __init__(self):
         tensors = []
         for ii in range(20):
             tensors.append(torch.load(f"data/representations_{ii}.pt"))
         self.all_data = torch.vstack(tensors)
-        self.labels = pl.read_parquet("data/labeled/labeled_tweets.parquet")["label"].to_pandas().map(
-            {"0": 1, "1": 0, "2": 1, "3": 2}  # off-by-one!
-        ).to_numpy()
+        self.labels = (
+            pl.read_parquet("data/labeled/labeled_tweets.parquet")["label"]
+            .to_pandas()
+            .map({"0": 1, "1": 0, "2": 1, "3": 2})  # off-by-one!
+            .to_numpy()
+        )
 
     def __len__(self):
         return self.all_data.size(0)
-    
+
     def __getitem__(self, idx):
         return self.all_data[idx], self.labels[idx]
 
 
 class BERTTensorDataModule(ptl.LightningDataModule):
-    def __init__(self):
+    def __init__(self, split_idx):
         super().__init__()
         self.dataset = BertTensorDataSet()
-        self.train_set, self.val_set = torch.utils.data.random_split(self.dataset, [8000, 2000])
+        self.split_idx = split_idx
+
+        self.trainval_idxs, self.test_idxs = train_test_split(
+            np.arange(len(self.dataset)),
+            shuffle=True,
+            random_state=42,
+            test_size=0.25,  # hold-out test set
+        )
+        self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
+
+        # these map split_idx i -> data indeces for split i
+        self.split_idxs_train = {}
+        self.split_idxs_val = {}
+
+        for split_idx, (train_idx, val_idx) in enumerate(
+            self.kfold.split(self.trainval_idxs)
+        ):
+            self.split_idxs_train[split_idx] = train_idx
+            self.split_idxs_val[split_idx] = val_idx
 
     def train_dataloader(self):
-        return torch.utils.data.DataLoader(self.train_set, batch_size=64)
-    
+        return torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=64,
+            sampler=torch.utils.data.SubsetRandomSampler(
+                self.split_idxs_train[self.split_idx]
+            ),
+        )
+
     def val_dataloader(self):
-        return torch.utils.data.DataLoader(self.val_set, batch_size=64)
+        return torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=64,
+            sampler=torch.utils.data.SubsetRandomSampler(
+                self.split_idxs_val[self.split_idx]
+            ),
+        )
+
+    def test_dataloader(self):
+        return torch.utils.data.DataLoader(
+            self.dataset,
+            batch_size=1024,
+            sampler=torch.utils.data.SubsetRandomSampler(
+                self.test_idxs
+            ),
+        )
 
 
 class TweetDataModule(ptl.LightningDataModule):

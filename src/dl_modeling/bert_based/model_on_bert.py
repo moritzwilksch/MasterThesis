@@ -20,8 +20,8 @@ from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import cross_val_score
 
 cross_val_score(
-    # LogisticRegression(max_iter=350, random_state=42, solver="sag", C=1.7),
-    GradientBoostingClassifier(n_estimators=100, min_samples_leaf=3),
+    LogisticRegression(max_iter=350, random_state=42, solver="sag", C=1.7),
+    # GradientBoostingClassifier(n_estimators=100, min_samples_leaf=3),
     X,
     y,
     cv=5,
