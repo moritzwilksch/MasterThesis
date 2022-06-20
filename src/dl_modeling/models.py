@@ -232,7 +232,7 @@ class BERTSAModel(BaseDLModel):
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):
-        x, y = batch
+        x = batch
         y_hat = self.forward(x)
         return F.softmax(y_hat, dim=1)
 

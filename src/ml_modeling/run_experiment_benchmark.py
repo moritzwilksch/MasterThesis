@@ -77,11 +77,12 @@ class Model(Enum):
     RECURRENTNN = "recurrentnn"
     TRANSFORMERNN = "transformernn"
     BERTBASED = "bertbased"
+    LGBM = "lgbm"
 
 
 ########################
-DATASET = Dataset.PYFIN_SENTI
-MODEL = Model.LOGISTIC_REGRESSION
+DATASET = Dataset.FINSOME
+MODEL = Model.BERTBASED
 ########################
 
 if DATASET == Dataset.FINSOME:
@@ -160,6 +161,28 @@ if MODEL == Model.TRANSFORMERNN:
     trainer = ptl.Trainer()
     batched_preds = trainer.predict(model, dataset.all_dataloader())
     preds = torch.vstack(batched_preds).detach().numpy()
+
+    test_scores = [
+        roc_auc_score(data["label"].astype("int") - 1, preds, multi_class="ovr")
+    ]
+    times_taken = "N/A"
+
+if MODEL == Model.BERTBASED:
+    if DATASET == Dataset.PYFIN_SENTI:
+        raise ValueError("Do not run inference on the data we trained on!")
+
+    model = BERTSAModel.load_from_checkpoint(
+        "outputs/models/final_epoch=34-val_acc=0.63.ckpt"
+    )
+    model.eval()
+    
+    tensors = []
+    for ii in range(20):
+        tensors.append(torch.load(f"data/distilbert/finsome_representations_{ii}.pt"))
+    X = torch.vstack(tensors).detach()
+
+    preds = model.predict_step(X, None).detach().numpy()
+    # preds = torch.vstack(batched_preds).detach().numpy()
 
     test_scores = [
         roc_auc_score(data["label"].astype("int") - 1, preds, multi_class="ovr")
