@@ -128,3 +128,20 @@ times_taken = [
   0.3084760420024395,
   0.3084760420024395,
 ] # no outer CV, single score copied for SD=0 :(
+
+[BERTFinetune]
+test_scores = [
+  0.8135501034718399,
+  0.8135501034718399,
+  0.8135501034718399,
+  0.8135501034718399,
+  0.8135501034718399,
+] # no outer CV, single score copied for SD=0 :(
+
+times_taken = [
+  112.6561281664297,
+  112.6561281664297,
+  112.6561281664297,
+  112.6561281664297,
+  112.6561281664297,
+] # no outer CV, single score copied for SD=0 :(

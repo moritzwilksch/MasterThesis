@@ -8,8 +8,19 @@ import toml
 from src.utils.plotting import Colors, set_style
 
 set_style()
-OURS = ["LogReg", "SVM", "TransformerNN", "RecurrentNN"]
+OURS = ["LogReg", "SVM", "TransformerNN", "RecurrentNN", "BERTFinetune"]
 PRETRAINED = ["FinBERT", "TwitterRoBERTa", "VADER", "NTUSD-Fin"]
+DISPLAY_NAMES = {
+    "LogReg": "Logistic\nRegression",
+    "SVM": "SVM",
+    "TransformerNN": "Transformer\nNN",
+    "RecurrentNN": "Recurrent\nNN",
+    "BERTFinetune": "BERT\nFinetune",
+    "FinBERT": "FinBERT",
+    "TwitterRoBERTa": "Twitter\nRoBERTa",
+    "VADER": "VADER",
+    "NTUSD-Fin": "NTUSD-Fin",
+}
 #%%
 data = toml.load("outputs/static/model_test_scores.toml")
 scores = pd.DataFrame({k: data[k]["test_scores"] for k in data})
@@ -72,7 +83,7 @@ def plot_scores(score_df, ax):
         ha="center",
     )
     ax.text(
-        x=5.5,
+        x=6,
         y=0.87,
         s="Proposed Models",
         weight="bold",
@@ -88,9 +99,12 @@ plot_scores(scores, ax)
 ax.set_ylim(0.49, 0.86)
 ax.set_ylabel("Out-of-sample ROC AUC", labelpad=15, weight="bold")
 ax.tick_params(axis="x", length=0)
-ax.set_xlim(-0.25, 7.25)
+ax.set_xlim(-0.25, 8.25)
 ax.set_xlabel("Model", weight="bold", labelpad=15)
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
+ax.set_xticklabels(
+    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
+)
 
 sns.despine(bottom=True)
 plt.tight_layout()
@@ -165,7 +179,7 @@ def plot_times(times_df, ax):
         ha="center",
     )
     ax.text(
-        x=5.5,
+        x=6,
         y=200,
         s="Proposed Models",
         weight="bold",
@@ -182,6 +196,9 @@ ax.set_xlabel("Model", labelpad=15, weight="bold")
 ax.set_ylabel("Inference time per sample (ms)", labelpad=15, weight="bold")
 ax.set_yscale("log")
 ax.tick_params(axis="x", length=0)
+ax.set_xticklabels(
+    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
+)
 ax.yaxis.set_major_formatter(lambda x, pos: f"{x:.1f}")
 
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
@@ -200,8 +217,12 @@ plot_scores(finsome_scores, ax)
 ax.set_ylim(0.49, 0.86)
 ax.set_ylabel("ROC AUC on Fin-SoMe", labelpad=15, weight="bold")
 ax.tick_params(axis="x", length=0)
-ax.set_xlim(-0.25, 7.25)
+ax.set_xlim(-0.25, 8.25)
 ax.set_xlabel("Model", weight="bold", labelpad=15)
+ax.set_xticklabels(
+    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
+)
+
 ax.grid(axis="y", ls="--", color="black", alpha=0.25)
 
 sns.despine(bottom=True)

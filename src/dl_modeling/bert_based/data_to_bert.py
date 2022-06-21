@@ -1,4 +1,6 @@
 #%%
+import time
+
 import numpy as np
 import polars as pl
 import torch
@@ -36,6 +38,7 @@ for idx, batch in enumerate(np.array_split(df, 20)):
     print(f"Processing batch #{idx}...")
     texts = batch["text"].to_list()
 
+    tic = time.perf_counter()
     tokens = tokenizer(
         texts,
         return_tensors="pt",
@@ -44,4 +47,6 @@ for idx, batch in enumerate(np.array_split(df, 20)):
     )
     out = model(**tokens).last_hidden_state
     representations = torch.mean(out, dim=1)
-    torch.save(representations, f"data/distilbert/noprep_pyfin_{idx}.pt")
+    tac = time.perf_counter()
+    print(f"Time taken: {tac - tic} for {len(texts)} texts")
+    # torch.save(representations, f"data/distilbert/noprep_pyfin_{idx}.pt")

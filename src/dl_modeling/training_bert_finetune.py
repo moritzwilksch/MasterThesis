@@ -87,14 +87,14 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    study = optuna.create_study(
-        storage="sqlite:///tuning/dl_optuna_bert.db",
-        study_name=f"BERT",
-        direction="maximize",
-        load_if_exists=True,
-    )
+    # study = optuna.create_study(
+    #     storage="sqlite:///tuning/dl_optuna_bert.db",
+    #     study_name=f"BERT",
+    #     direction="maximize",
+    #     load_if_exists=True,
+    # )
 
-    study.optimize(objective, n_trials=50)
+    # study.optimize(objective, n_trials=50)
 
     # objective(trial=None)  # one manual run
 
@@ -161,4 +161,4 @@ def retrain_best_model():
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-# retrain_best_model()
+retrain_best_model()

@@ -173,9 +173,7 @@ if MODEL == Model.BERTBASED:
     if DATASET == Dataset.PYFIN_SENTI:
         raise ValueError("Do not run inference on the data we trained on!")
 
-    model = BERTSAModel.load_from_checkpoint(
-        "lightning_logs/bert_final/final_epoch=13-val_acc=0.61.ckpt"
-    )
+    model = BERTSAModel.load_from_checkpoint("outputs/models/bert_final.ckpt")
     model.eval()
 
     tensors = []

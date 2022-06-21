@@ -8,12 +8,14 @@ import torch.nn.functional as F
 from sklearn.metrics import (classification_report, confusion_matrix,
                              roc_auc_score)
 
-from src.dl_modeling.data import TweetDataModule
-from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel
+from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
+                                  TweetDataModule)
+from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
+                                    TransformerSAModel)
 from src.utils.preprocessing import Preprocessor
 
 #%%
-USE_MODEL = "recurrent"
+USE_MODEL = "bert"
 
 prepper = Preprocessor()
 if USE_MODEL == "transformer":
@@ -22,10 +24,15 @@ if USE_MODEL == "transformer":
         "outputs/models/transformer_final.ckpt"
     )
     model.eval()
-else:
+elif USE_MODEL == "recurrent":
     data = TweetDataModule(split_idx="retrain", batch_size=64, model_type="recurrent")
     model = RecurrentSAModel.load_from_checkpoint("outputs/models/gru_final.ckpt")
-
+elif USE_MODEL == "bert":
+    data = BERTTensorDataModule(
+        split_idx="retrain", data_prefix="prep_pyfin", batch_size=64
+    )
+    model = BERTSAModel.load_from_checkpoint("outputs/models/bert_final.ckpt")
+model.eval()
 #%%
 # s = "short $TSLA, buy puts"
 # # s = "long $TSLA, buy calls"
@@ -50,8 +57,10 @@ tac = time.perf_counter()
 time_taken = (
     tac - tic
 )  # to make comparable: this should be inference time for 2_000 samples
-time_taken / len(data.ytest) * 2_000
-print(f"Prediction time for 2000 samples: {tac - tic}")
+data_len = len(data.ytest) if USE_MODEL != "bert" else 2_500
+bert_conversion_time = 0 if USE_MODEL != "bert" else 0.0563
+time_for_2000 = (time_taken / data_len + bert_conversion_time) * 2_000
+print(f"Prediction time for 2000 samples: {time_for_2000}")
 
 #%%
 preds = torch.vstack(batched_preds)  # .argmax(dim=1)

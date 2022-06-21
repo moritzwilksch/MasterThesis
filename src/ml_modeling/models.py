@@ -232,13 +232,13 @@ class SVMModel(BaseSklearnSAModel):
 class LGBMModel(BaseSklearnSAModel):
     # this is the final model based on nested CV
     FINAL_BEST_PARAMS = {
-        "kbest__k": 9000,
-        "model__max_bin": 129,
+        "kbest__k": 5000,
+        "model__max_bin": 451,
         "model__min_data_in_leaf": 2,
-        "model__num_leaves": 56,
+        "model__num_leaves": 51,
         "vectorizer__analyzer": "char_wb",
         "vectorizer__ngram_range": (4, 4),
-    }
+    }  # val-auc = 0.822, test-auc = 0.826
 
     def __init__(self, split_idx, train_val_data):
         super().__init__("LGBM", split_idx=split_idx, train_val_data=train_val_data)

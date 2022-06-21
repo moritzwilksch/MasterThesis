@@ -46,7 +46,7 @@ df = df.to_pandas()
 
 
 experiment = Experiment("LGBM", LGBMModel, df)
-experiment.run(n_trials=100)
+# experiment.run(n_trials=100)
 
 #%%
 val_scores, test_scores, best_params, times_taken = experiment.load()

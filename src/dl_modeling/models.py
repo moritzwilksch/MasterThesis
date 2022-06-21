@@ -206,7 +206,10 @@ class TransformerSAModel(BaseDLModel):
 
 ###############################################################################
 class BERTSAModel(BaseDLModel):
-    BEST_PARAMS = {"dropout": 0.2149025209596937, "hidden_dim": 90}
+    BEST_PARAMS = {
+        "dropout": 0.24879384650702396,
+        "hidden_dim": 238,
+    }  # val-auc = 0.8016462095744542
 
     def __init__(
         self,
