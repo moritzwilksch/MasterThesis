@@ -1,6 +1,8 @@
 #%%
 from abc import ABC
 
+import gensim
+import numpy as np
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
@@ -8,10 +10,11 @@ import torch.nn.functional as F
 import torchmetrics
 from positional_encodings import PositionalEncoding1D, Summer
 from pytorch_lightning.loggers import TensorBoardLogger
-from transformers import AutoModel, AutoTokenizer, pipeline
-import numpy as np
 from sklearn.metrics import roc_auc_score
-from src.dl_modeling.data import TweetDataModule, BertTensorDataSet, BERTTensorDataModule
+from transformers import AutoModel, AutoTokenizer, pipeline
+
+from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
+                                  TweetDataModule)
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 BATCH_SIZE = 64
@@ -26,6 +29,7 @@ class BaseDLModel(ABC, ptl.LightningModule):
         self.val_auc = torchmetrics.AUROC(num_classes=3)
 
 
+###############################################################################
 class RecurrentSAModel(BaseDLModel):
     BEST_PARAMS = {
         "dropout": 0.4137700949108063,
@@ -105,6 +109,7 @@ class RecurrentSAModel(BaseDLModel):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
 
+###############################################################################
 class TransformerSAModel(BaseDLModel):
     BEST_PARAMS = {
         "dim_ff": 140,
@@ -131,6 +136,15 @@ class TransformerSAModel(BaseDLModel):
         self.embedding = nn.Embedding(
             num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
         )
+
+        # print("Loading embeddings...")
+        # model = gensim.models.KeyedVectors.load_word2vec_format(
+        #     "~/Downloads/glove.6B.50d.txt", binary=False, no_header=True
+        # )
+        # weights = torch.FloatTensor(model.vectors)
+        # self.embedding = nn.Embedding.from_pretrained(weights)
+        # print("Done.")
+
         self.pos_encodings = Summer(PositionalEncoding1D(embedding_dim))
         self.token_dropout = nn.Dropout(token_dropout)
 
@@ -144,7 +158,9 @@ class TransformerSAModel(BaseDLModel):
         x = self.embedding(x)
         # x = x + self.pos_encodings(x)
         x = torch.swapaxes(x, 0, 1)
-        x = self.pos_encodings(x)  # this library needs (batch_size, x, emb_dim) tensors!!
+        x = self.pos_encodings(
+            x
+        )  # this library needs (batch_size, x, emb_dim) tensors!!
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)
@@ -188,6 +204,7 @@ class TransformerSAModel(BaseDLModel):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
 
+###############################################################################
 class BERTSAModel(BaseDLModel):
     BEST_PARAMS = {"dropout": 0.2149025209596937, "hidden_dim": 90}
 
@@ -232,75 +249,9 @@ class BERTSAModel(BaseDLModel):
         self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
 
     def predict_step(self, batch, batch_idx):
-        x = batch
+        x, _ = batch
         y_hat = self.forward(x)
         return F.softmax(y_hat, dim=1)
 
     def configure_optimizers(self):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
-
-
-#%%
-if __name__ == "__main__":
-    tb_logger = TensorBoardLogger("lightning_logs", name=f"bertbased-split-{0}")
-    # data = TweetDataModule(split_idx=0, batch_size=BATCH_SIZE, model_type="bert")
-
-    # model = TransformerSAModel(
-    #     vocab_size=3_000,
-    #     token_dropout=0.2,
-    #     embedding_dim=128,
-    #     nhead=1,
-    #     dim_ff=128,
-    #     hidden_dim=64,
-    #     dropout=0.2,
-    #     lr=1e-3,
-    # )
-
-    model = BERTSAModel(128, 0.3)
-
-    # trainer
-    trainer = ptl.Trainer(
-        logger=tb_logger,
-        max_epochs=1,
-        log_every_n_steps=50,
-        # auto_lr_find=True,
-    )
-
-    # res = trainer.tuner.lr_find(
-    #     model,
-    #     data.train_dataloader(),
-    #     data.val_dataloader(),
-    #     num_training=100,
-    #     min_lr=1e-6,
-    #     max_lr=0.1,
-    # )
-    # res.plot()
-
-    datamodule = BERTTensorDataModule(split_idx=0)
-    trainer.fit(
-        model,
-        datamodule
-        # train_dataloaders=data.train_dataloader(),
-        # val_dataloaders=data.val_dataloader(),
-    )
-
-    # load best and calculate test AUC
-    best_model_path = trainer.checkpoint_callback.best_model_path
-    print(best_model_path)
-
-    model = BERTSAModel.load_from_checkpoint(best_model_path)
-    model.eval()
-
-    test = datamodule.test_dataloader()
-
-    # create test-set predictions
-    batched_preds = trainer.predict(model, test)
-    preds = torch.vstack(batched_preds)
-
-    # we need to extract the test-set labels from the dataloader
-    ytest_true = []
-    for _, y in datamodule.test_dataloader():
-        ytest_true.append(y.numpy())
-    ytest_true = np.concatenate(ytest_true)
-
-    print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))

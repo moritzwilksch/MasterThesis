@@ -21,3 +21,6 @@ finsome_score = [0.7065014316463024]
 
 [RecurrentNN]
 finsome_score = [0.7092727667441329]
+
+[BERTFinetune]
+finsome_score = [0.7004864201600668]

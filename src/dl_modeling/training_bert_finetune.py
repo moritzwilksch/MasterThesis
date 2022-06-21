@@ -1,4 +1,3 @@
-from posixpath import split
 import numpy as np
 import optuna
 import pytorch_lightning as ptl
@@ -6,9 +5,8 @@ import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.metrics import roc_auc_score
 
-from src.dl_modeling.data import TweetDataModule, BERTTensorDataModule
-from src.dl_modeling.models import BATCH_SIZE, BERTSAModel
-
+from src.dl_modeling.data import BERTTensorDataModule
+from src.dl_modeling.models import BERTSAModel
 
 torch.set_num_threads(8)
 if __name__ == "__main__":
@@ -22,14 +20,16 @@ if __name__ == "__main__":
                 "lightning_logs", name=f"bert-split-{split_idx}"
             )
 
-            datamodule = BERTTensorDataModule(split_idx=split_idx)
+            datamodule = BERTTensorDataModule(
+                split_idx=split_idx, data_prefix="prep_pyfin"
+            )
 
             if trial is None:
                 model = BERTSAModel(128, 0.3)
 
             else:
                 model = BERTSAModel(
-                    hidden_dim=trial.suggest_int("hidden_dim", 8, 256),
+                    hidden_dim=trial.suggest_int("hidden_dim", 8, 512),
                     dropout=trial.suggest_float("dropout", 0.0, 0.5),
                     lr=1e-3,
                 )
@@ -87,20 +87,20 @@ if __name__ == "__main__":
 
         return np.mean(aucs_per_split)
 
-    # study = optuna.create_study(
-    #     storage="sqlite:///tuning/dl_optuna_bert.db",
-    #     study_name=f"BERT",
-    #     direction="maximize",
-    #     load_if_exists=True,
-    # )
+    study = optuna.create_study(
+        storage="sqlite:///tuning/dl_optuna_bert.db",
+        study_name=f"BERT",
+        direction="maximize",
+        load_if_exists=True,
+    )
 
-    # study.optimize(objective, n_trials=50)
+    study.optimize(objective, n_trials=50)
 
     # objective(trial=None)  # one manual run
 
 
 def retrain_best_model():
-    datamodule = BERTTensorDataModule(split_idx="refit")
+    datamodule = BERTTensorDataModule(split_idx="refit", data_prefix="prep_pyfin")
 
     (
         train_dataloader,
@@ -127,7 +127,7 @@ def retrain_best_model():
     # trainer
     trainer = ptl.Trainer(
         logger=tb_logger,
-        max_epochs=50,
+        max_epochs=100,
         log_every_n_steps=50,
         auto_lr_find=False,
         callbacks=[checkpoint_callback, early_stopping_callback],
@@ -161,4 +161,4 @@ def retrain_best_model():
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-retrain_best_model()
+# retrain_best_model()

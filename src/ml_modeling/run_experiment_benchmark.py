@@ -6,10 +6,12 @@ import pandas as pd
 import polars as pl
 import pytorch_lightning as ptl
 import torch
+import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule, TweetDataSet
-from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel, BERTSAModel
+from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
+                                    TransformerSAModel)
 from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
                                         NTUSDMeBenchmark,
                                         TwitterRoBERTaBenchmark,
@@ -172,16 +174,17 @@ if MODEL == Model.BERTBASED:
         raise ValueError("Do not run inference on the data we trained on!")
 
     model = BERTSAModel.load_from_checkpoint(
-        "outputs/models/final_epoch=34-val_acc=0.63.ckpt"
+        "lightning_logs/bert_final/final_epoch=13-val_acc=0.61.ckpt"
     )
     model.eval()
-    
+
     tensors = []
     for ii in range(20):
-        tensors.append(torch.load(f"data/distilbert/finsome_representations_{ii}.pt"))
+        tensors.append(torch.load(f"data/distilbert/prep_finsome_{ii}.pt"))
     X = torch.vstack(tensors).detach()
 
-    preds = model.predict_step(X, None).detach().numpy()
+    preds = model(X).detach()
+    preds = F.softmax(preds, dim=1).numpy()
     # preds = torch.vstack(batched_preds).detach().numpy()
 
     test_scores = [

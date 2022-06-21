@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from lightgbm import LGBMClassifier
 
 import numpy as np
 import optuna
 import pandas as pd
+from lightgbm import LGBMClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression

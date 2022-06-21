@@ -27,7 +27,7 @@ if __name__ == "__main__":
                 model = TransformerSAModel(
                     vocab_size=3_000,
                     token_dropout=0.2,
-                    embedding_dim=128,
+                    embedding_dim=50,
                     nhead=1,
                     dim_ff=128,
                     hidden_dim=64,
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     # study.optimize(objective, n_trials=50)
 
-    # objective(trial=None)  # one manual run
+    objective(trial=None)  # one manual run
 
 
 def retrain_best_model():
@@ -180,4 +180,4 @@ def retrain_best_model():
     print(roc_auc_score(ytest_true, preds.numpy(), multi_class="ovr"))
 
 
-retrain_best_model()
+# retrain_best_model()

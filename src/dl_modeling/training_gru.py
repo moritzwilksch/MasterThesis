@@ -1,6 +1,5 @@
 #%%
 import numpy as np
-import optuna
 import pytorch_lightning as ptl
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger

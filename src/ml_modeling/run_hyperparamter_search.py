@@ -7,7 +7,7 @@ import polars as pl
 from sklearn.linear_model import LogisticRegression
 
 from src.ml_modeling.experiment import Experiment
-from src.ml_modeling.models import LogisticRegressionModel, SVMModel, LGBMModel
+from src.ml_modeling.models import LGBMModel, LogisticRegressionModel, SVMModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
 

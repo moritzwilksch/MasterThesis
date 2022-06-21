@@ -5,7 +5,6 @@ import mlflow
 import numpy as np
 import pandas as pd
 import polars as pl
-from sklearn.pipeline import Pipeline
 import torchtext
 from black import Line
 from bpemb import BPEmb
@@ -18,6 +17,7 @@ from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
 from src.utils.preprocessing import Preprocessor
@@ -82,10 +82,12 @@ with mlflow.start_run():
     kb = SelectKBest(k=KBEST)
     # X_kbest = kb.fit_transform(X, y)
 
-    vectorizer = TfidfVectorizer(ngram_range=(4, 6), analyzer="char_wb", stop_words="english")
+    vectorizer = TfidfVectorizer(
+        ngram_range=(4, 6), analyzer="char_wb", stop_words="english"
+    )
     # model = LGBMClassifier(n_estimators=100, n_jobs=3, num_leaves=16)
     model = LogisticRegression(C=1, random_state=42, max_iter=350)
-    
+
     mlflow.log_params(model.get_params())
     mlflow.log_params(vectorizer.get_params())
 
@@ -106,8 +108,6 @@ with mlflow.start_run():
     mlflow.log_param("kbest", KBEST)
     mlflow.log_param("modeltype", model.__class__.__name__)
     # mlflow.log_param("tokenizer", TOK)
-
-
 
 
 #%%
