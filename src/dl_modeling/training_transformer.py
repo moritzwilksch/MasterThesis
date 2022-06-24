@@ -26,13 +26,8 @@ if __name__ == "__main__":
             if trial is None:
                 model = TransformerSAModel(
                     vocab_size=3_000,
-                    token_dropout=0.2,
-                    embedding_dim=50,
-                    nhead=1,
-                    dim_ff=128,
-                    hidden_dim=64,
-                    dropout=0.2,
-                    lr=1e-3,
+                    nhead=4,
+                    **TransformerSAModel.BEST_PARAMS
                 )
 
             else:

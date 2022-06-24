@@ -72,12 +72,12 @@ def tokenize(s):
 from nltk.stem import PorterStemmer
 
 stemmer = PorterStemmer()
-df = df.with_column(
-    pl.col("text")
-    .str.split(" ")
-    .arr.eval(pl.element().apply(lambda x: stemmer.stem(x)))
-    .arr.join(" ")
-)
+# df = df.with_column(
+#     pl.col("text")
+#     .str.split(" ")
+#     .arr.eval(pl.element().apply(lambda x: stemmer.stem(x)))
+#     .arr.join(" ")
+# )
 # X = df["text"]#.to_pandas()
 # y = df["label"]#.to_list()
 from textaugment import EDA
@@ -88,13 +88,13 @@ t = EDA()
 
 def augment_text(text: str) -> str:
     # print(text)
-    text = t.synonym_replacement(text)
-    text = t.random_insertion(text)
-    text = t.random_deletion(text)
+    text = t.synonym_replacement(text, n=2)
+    # text = t.random_insertion(text, n=2)
+    # text = t.random_deletion(text)
     return text
 
 
-augmented = df.select(
+augmented = pl.from_pandas(dftrainval).select(
     [pl.col("text").apply(augment_text).alias("text"), pl.col("label")]
 )
 
@@ -176,7 +176,6 @@ from sklearn.model_selection import train_test_split
 
 model.fit(dftrainval["text"], dftrainval["label"])
 
-#%%
 preds = model.predict_proba(dftest["text"])
 print(roc_auc_score(dftest["label"], preds, multi_class="ovr"))
 
@@ -193,12 +192,12 @@ finsome = pd.DataFrame(
 
 prepper = Preprocessor()
 finsome = prepper.process(pl.from_pandas(finsome))#.to_pandas()
-finsome = finsome.with_column(
-    pl.col("text")
-    .str.split(" ")
-    .arr.eval(pl.element().apply(lambda x: stemmer.stem(x)))
-    .arr.join(" ")
-)
+# finsome = finsome.with_column(
+#     pl.col("text")
+#     .str.split(" ")
+#     .arr.eval(pl.element().apply(lambda x: stemmer.stem(x)))
+#     .arr.join(" ")
+# )
 preds = model.predict_proba(finsome["text"])
 print(roc_auc_score(finsome["label"], preds, multi_class="ovr"))
 
