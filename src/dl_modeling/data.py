@@ -155,6 +155,7 @@ class TweetDataModule(ptl.LightningDataModule):
             random_state=42,
             test_size=0.25,  # hold-out test set
         )
+
         self.kfold = KFold(n_splits=5, shuffle=True, random_state=42)
 
         # these map split_idx i -> data indeces for split i
@@ -166,6 +167,37 @@ class TweetDataModule(ptl.LightningDataModule):
         ):
             self.split_idxs_train[split_idx] = train_idx
             self.split_idxs_val[split_idx] = val_idx
+
+        from textaugment import EDA
+
+        t = EDA()
+
+        def augment_text(text: str) -> str:
+            text = t.synonym_replacement(text, n=2)
+            return text
+
+        dftrain = pd.concat(
+            [
+                self.xtrainval.iloc[self.split_idxs_train[self.split_idx]],
+                self.ytrainval.iloc[self.split_idxs_train[self.split_idx]],
+            ],
+            axis=1,
+        )
+        
+        self.dfval = pd.concat(
+            [
+                self.xtrainval.iloc[self.split_idxs_val[self.split_idx]],
+                self.ytrainval.iloc[self.split_idxs_val[self.split_idx]],
+            ],
+            axis=1,
+        )
+        augmented = pl.from_pandas(dftrain).select(
+            [pl.col("text").apply(augment_text).alias("text"), pl.col("label")]
+        )
+
+        self.dftrain = pd.concat([dftrain, augmented.to_pandas()]).reset_index(drop=True)
+
+    
 
         if RETRAIN:
             self.tokenizer = torchtext.data.functional.sentencepiece_numericalizer(
@@ -182,9 +214,7 @@ class TweetDataModule(ptl.LightningDataModule):
             )
 
     def train_dataloader(self):
-        df_for_split = pd.concat([self.xtrainval, self.ytrainval], axis=1).iloc[
-            self.split_idxs_train[self.split_idx]
-        ]
+        df_for_split = self.dftrain
 
         return torch.utils.data.DataLoader(
             TweetDataSet(df_for_split),
@@ -194,9 +224,7 @@ class TweetDataModule(ptl.LightningDataModule):
         )
 
     def val_dataloader(self):
-        df_for_split = pd.concat([self.xtrainval, self.ytrainval], axis=1).iloc[
-            self.split_idxs_val[self.split_idx]
-        ]
+        df_for_split = self.dfval
         return torch.utils.data.DataLoader(
             TweetDataSet(df_for_split),
             batch_size=1024,
