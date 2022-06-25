@@ -19,6 +19,8 @@ from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 BATCH_SIZE = 64
 
+from src.dl_modeling.data import tokenizer
+
 
 class BaseDLModel(ABC, ptl.LightningModule):
     def __init__(self):
@@ -133,9 +135,7 @@ class TransformerSAModel(BaseDLModel):
         super().__init__()
 
         # layers
-        self.embedding = nn.Embedding(
-            num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
-        )
+        self.embedding = nn.Embedding.from_pretrained(torch.tensor(tokenizer.vectors))
 
         # print("Loading embeddings...")
         # model = gensim.models.KeyedVectors.load_word2vec_format(

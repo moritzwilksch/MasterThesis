@@ -12,6 +12,10 @@ from torchtext.vocab import build_vocab_from_iterator
 from src.utils.preprocessing import Preprocessor
 
 prepper = Preprocessor()
+from bpemb import BPEmb
+
+tokenizer = BPEmb(lang="en", vs=3000)
+
 
 
 class TweetDataSet(torch.utils.data.Dataset):
@@ -260,7 +264,7 @@ class TweetDataModule(ptl.LightningDataModule):
 
         for text, label in batch:
             # tokens = self.vocab(self.tokenizer(text))
-            tokens = list(self.tokenizer([text]))[0]
+            tokens = list(tokenizer.encode_ids(text))
             text_tensors.append(torch.Tensor(tokens).long())
             labels.append(label)
             seq_lens.append(len(tokens))
