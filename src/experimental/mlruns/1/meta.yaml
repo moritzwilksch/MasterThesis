@@ -1,0 +1,4 @@
+artifact_location: file:///home/moritz/Documents/MasterThesis/src/experimental/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: other-fast-models
