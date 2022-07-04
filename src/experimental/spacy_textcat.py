@@ -1,8 +1,8 @@
 #%%
-import spacy
 import polars as pl
-from src.utils.preprocessing import Preprocessor
+import spacy
 
+from src.utils.preprocessing import Preprocessor
 
 #%%
 df = pl.read_parquet("data/labeled/labeled_tweets.parquet")
@@ -27,4 +27,3 @@ augmented = df.select(
 )
 
 #%%
-

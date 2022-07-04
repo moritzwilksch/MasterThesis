@@ -27,7 +27,13 @@ if __name__ == "__main__":
                 model = TransformerSAModel(
                     vocab_size=3_000,
                     nhead=4,
-                    **TransformerSAModel.BEST_PARAMS
+                    **{
+                        "dim_ff": 2048,
+                        "dropout": 0.28603031004494467,
+                        "embedding_dim": 72,
+                        "hidden_dim": 237,
+                        "token_dropout": 0.4387140736539719,
+                    },
                 )
 
             else:

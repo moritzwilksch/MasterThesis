@@ -6,18 +6,13 @@ import mlflow
 import numpy as np
 import pandas as pd
 import polars as pl
-from sklearn.feature_selection import SelectKBest
-
 import torchtext
-
 from bpemb import BPEmb
 from lightgbm import LGBMClassifier
-from sklearn.ensemble import (
-    ExtraTreesClassifier,
-    GradientBoostingClassifier,
-    RandomForestClassifier,
-)
+from sklearn.ensemble import (ExtraTreesClassifier, GradientBoostingClassifier,
+                              RandomForestClassifier)
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
+from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
@@ -91,6 +86,7 @@ dftrainval, dftest = train_test_split(df.to_pandas())
 
 t = EDA()
 
+
 def augment_text(text: str) -> str:
     # print(text)
     text = t.synonym_replacement(text, n=2)
@@ -107,7 +103,6 @@ def augment_text(text: str) -> str:
 
 #%%
 from sklearn.base import BaseEstimator, ClassifierMixin
-
 from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import FunctionTransformer
 
@@ -135,8 +130,6 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
         return self.model.predict_proba(X)
 
 
-
-
 with mlflow.start_run():
     KBEST = 3_000
 
@@ -157,7 +150,7 @@ with mlflow.start_run():
         # "model__C": 1.7,
         # "model__n_jobs": 3,
         # "model__max_iter": 350,
-        "model__num_leaves": 32
+        "model__num_leaves": 32,
     }
 
     mlflow.log_params(params)
@@ -168,7 +161,7 @@ with mlflow.start_run():
     #     model.set_params(**params),
     #     dftrainval["text"],
     #     dftrainval["label"],
-    #     # X, 
+    #     # X,
     #     # y,
     #     cv=5,
     #     scoring=make_scorer(roc_auc_score, needs_proba=True, multi_class="ovr"),
@@ -191,7 +184,6 @@ with mlflow.start_run():
 
         y_pred = model.predict_proba(_val["text"])
         scores.append(roc_auc_score(_val["label"], y_pred, multi_class="ovr"))
-
 
     print(f"Mean score: {np.mean(scores):.3f} (SD: {np.std(scores):.3f}), {scores}")
     # mlflow.lightgbm.log_model(model, "model")
@@ -221,7 +213,7 @@ finsome = pd.DataFrame(
 )
 
 prepper = Preprocessor()
-finsome = prepper.process(pl.from_pandas(finsome))#.to_pandas()
+finsome = prepper.process(pl.from_pandas(finsome))  # .to_pandas()
 # finsome = finsome.with_column(
 #     pl.col("text")
 #     .str.split(" ")
