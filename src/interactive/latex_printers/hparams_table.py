@@ -1,7 +1,9 @@
 #%%
 from numpy import isin
+
+from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
+                                    TransformerSAModel)
 from src.ml_modeling.models import LogisticRegressionModel, SVMModel
-from src.dl_modeling.models import RecurrentSAModel, TransformerSAModel, BERTSAModel
 
 #%%
 models = [
@@ -38,6 +40,7 @@ all_params = [
 def texify(s: str):
     return s.replace("__", "_").replace("_", "\_")
 
+
 #%%
 lines = []
 for param in all_params:
@@ -48,11 +51,10 @@ for param in all_params:
         if isinstance(value, float):
             value = round(value, 3) if value > 0.001 else f"{value:.2e}"
         current_line.append(str(value))
-    
+
     lines.append(" & ".join(current_line) + " \\\\")
 
 for line in lines:
     if "token" in line and "dropout" in line:
         print("\\midrule")
     print(texify(line))
-

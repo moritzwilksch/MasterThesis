@@ -1,11 +1,12 @@
 #%%
-import polars as pl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import polars as pl
 import seaborn as sns
+
+from src.utils.plotting import Colors, scale_lightness, set_style
 from src.utils.preprocessing import Preprocessor
-from src.utils.plotting import Colors, set_style
 
 set_style()
 
@@ -34,7 +35,7 @@ def plot_class_distribution():
         )["label"]
         .value_counts(normalize=True)
     ).sort_index()
-    height = 0.35
+    height = 0.32
     ax.barh(
         y=np.arange(3) + 0.19,
         width=plot_df,
@@ -42,7 +43,7 @@ def plot_class_distribution():
         color=Colors.DARKBLUE.value,
         label="pyFin",
         # hatch="\\\\",
-        # ec=(1, 1, 1, 0.3),
+        ec=scale_lightness(sns.desaturate(Colors.DARKBLUE.value, 1), 0.4),
     )
     ax.barh(
         y=np.arange(3) - 0.19,
@@ -51,7 +52,7 @@ def plot_class_distribution():
         height=height,
         label="Fin-SoMe",
         # hatch="//",
-        # ec=(0, 0, 0, 0.3),
+        ec=scale_lightness(sns.desaturate("#CCCCCC", 1), 0.5),
     )
     sns.despine(left=True)
 
@@ -127,6 +128,3 @@ def plot_doc_length(df, finsome):
 plot_doc_length(df, finsome)
 
 #%%
-
-
-
