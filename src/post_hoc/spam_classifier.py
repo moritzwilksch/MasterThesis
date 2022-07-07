@@ -1,15 +1,16 @@
 #%%
-import numpy as np
 from collections import defaultdict
-import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import make_scorer, roc_auc_score
-from sklearn.feature_extraction.text import TfidfVectorizer
-from src.utils.preprocessing import Preprocessor
-import polars as pl
 
+import numpy as np
+import pandas as pd
+import polars as pl
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.model_selection import cross_val_score, train_test_split
+from sklearn.pipeline import Pipeline
+
+from src.utils.preprocessing import Preprocessor
 
 #%%
 df = pd.read_parquet("data/labeled/labeled_tweets.parquet")
