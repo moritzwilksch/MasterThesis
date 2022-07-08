@@ -11,14 +11,11 @@ import seaborn as sns
 import torch
 import torch.nn.functional as F
 from matplotlib import projections
-from sklearn.metrics import (classification_report, confusion_matrix,
-                             roc_auc_score)
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
-                                  TweetDataModule)
-from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
-                                    TransformerSAModel)
+from src.dl_modeling.data import BERTTensorDataModule, BertTensorDataSet, TweetDataModule
+from src.dl_modeling.models import BERTSAModel, RecurrentSAModel, TransformerSAModel
 from src.utils.plotting import Colors, scale_lightness, set_style
 from src.utils.preprocessing import Preprocessor
 
@@ -63,11 +60,12 @@ def get_nearest(sims, word):
 # get_nearest(sims, "down")
 
 import umap
+
 #%%
 from sklearn.manifold import TSNE
 
 
-def visualize_embeddings(embs, projector: str):
+def visualize_embeddings(embs, projector: str, ax):
     positive = [
         "up",
         "green",
@@ -98,7 +96,7 @@ def visualize_embeddings(embs, projector: str):
         # joblib.dump(low_dim_embeddings, "outputs/dump/low_dim_umap.joblib")
         low_dim_embeddings = joblib.load("outputs/dump/low_dim_umap.joblib")
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    # fig, ax = plt.subplots(figsize=(10, 7))
     colors = (
         [Colors.GREEN.value] * len(positive)
         + [Colors.RED.value] * len(negative)
@@ -118,12 +116,12 @@ def visualize_embeddings(embs, projector: str):
         "put": (0, -0.25),
         "down": (0, -0.25),
         "call": (0, -0.2),
-        "bullish": (-0.275, 0),
-        "green": (0.25, 0),
+        "bullish": (-0.3, 0),
+        "green": (0.3, 0),
         "buy": (-0.17, -0.1),
         "down": (0.25, 0),
         "-9.99": (0, -0.3),
-        "red": (0.05, 0.05),
+        "red": (0.1, 0.05),
     }
 
     _va_center = ["green", "call", "bullish", "down"]
@@ -156,13 +154,147 @@ def visualize_embeddings(embs, projector: str):
     ax.set_ylabel("Dimension 1", weight="bold")
 
     sns.despine()
-    fig.tight_layout()
-    fig.savefig("outputs/plots/word_embeddings.pdf", bbox_inches="tight")
+    # fig.tight_layout()
+    # fig.savefig("outputs/plots/word_embeddings.pdf", bbox_inches="tight")
 
 
-visualize_embeddings(
-    embs,
-    projector="umap",
-)
+# visualize_embeddings(
+#     embs,
+#     projector="umap",
+# )
 
 # %%
+import gensim
+
+word_vectors = gensim.models.KeyedVectors.load_word2vec_format(
+    "~/Downloads/glove.6B.50d.txt", binary=False, no_header=True
+)
+
+#%%
+def visualize_glove(word_vectors, ax):
+    RECALC = False
+    embs = word_vectors.vectors
+
+    if RECALC:
+        # low_dim_embeddings = TSNE(n_jobs=-1).fit_transform(embs)
+        # joblib.dump(low_dim_embeddings, "outputs/dump/glove_lowdim.joblib")
+        low_dim_embeddings = umap.UMAP(n_jobs=-1).fit_transform(embs)
+        joblib.dump(low_dim_embeddings, "outputs/dump/glove_lowdim_umap.joblib")
+    low_dim_embeddings = joblib.load("outputs/dump/glove_lowdim_umap.joblib")
+
+    positive = [
+        "up",
+        "green",
+        "long",
+        "bullish",
+        "call",
+        "buy",
+        # "+9.9",
+    ]
+    negative = ["sell", "bearish", "put", "short", "red", "down"]
+    neutral = [
+        "sure",
+        "chat",
+        "question",
+        "bitcoin",
+        "ceo",
+    ]
+
+    words = positive + negative + neutral
+
+    tokens = [word_vectors.key_to_index[word] for word in words]
+
+    # fig, ax = plt.subplots(figsize=(10, 7))
+    colors = (
+        [Colors.GREEN.value] * len(positive)
+        + [Colors.RED.value] * len(negative)
+        # + ["0.4"] * len(neutral)
+        + [Colors.DARKBLUE.value] * len(neutral)
+    )
+
+    ax.scatter(
+        low_dim_embeddings[tokens, 0],
+        low_dim_embeddings[tokens, 1],
+        # color=Colors.DARKBLUE.value,
+        c=colors,
+        ec=[scale_lightness(sns.desaturate(c, 1), 0.5) for c in colors],
+    )
+
+    _position_override = {
+        "green": (0, -0.25),
+        "red": (0, 0.1),
+        "sure": (0, -0.25),
+        "put": (0, -0.25),
+        "short": (-0.1, -0.1),
+        "call": (0, -0.25),
+        "long": (0.05, 0.1),
+    }
+
+    _use_arrow = {
+        "sell": (0.15, 0.15),
+        "buy": (-0.075, 0.25),
+        "up": (-0.25, -0.05),
+        "short": (-0.25, -0.05),
+        "long": (0.2, 0.25),
+        "down": (0, -0.5),
+        "bullish": (0.25, 0),
+        "bearish": (-0.1, 0.25),
+        "question": (0.3, 0.2)
+    }
+
+    _va_center = ["bullish", "long"]  # ["green", "call", "bullish", "down"]
+
+    ARROWPROPS = dict(
+        arrowstyle="->",
+        shrinkB=5,
+        color="0.6",
+    )
+
+    for idx, text in enumerate(words):
+        if text not in _position_override and text not in _use_arrow:
+            xy = (
+                low_dim_embeddings[tokens[idx], 0],
+                low_dim_embeddings[tokens[idx], 1] + 0.1,
+            )
+        elif text in _use_arrow:
+            xy = (
+                low_dim_embeddings[tokens[idx], 0],
+                low_dim_embeddings[tokens[idx], 1],
+            )
+
+            xytext = (
+                low_dim_embeddings[tokens[idx], 0] + _use_arrow[text][0],
+                low_dim_embeddings[tokens[idx], 1] + _use_arrow[text][1],
+            )
+        else:
+            xy = (
+                low_dim_embeddings[tokens[idx], 0] + _position_override[text][0],
+                low_dim_embeddings[tokens[idx], 1] + _position_override[text][1],
+            )
+
+        ax.annotate(
+            text,
+            xy=xy,
+            xytext=xy if text not in _use_arrow else xytext,
+            size=14,
+            ha="center",
+            va="center" if text in _va_center else "bottom",
+            arrowprops=None if text not in _use_arrow else ARROWPROPS,
+        )
+
+    ax.margins(0.1)
+    ax.set_xlabel("Dimension 0", weight="bold")
+    ax.set_ylabel("Dimension 1", weight="bold")
+
+    sns.despine()
+    # fig.tight_layout()
+
+fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+
+visualize_embeddings(embs, "umap", ax=axes[0])
+visualize_glove(word_vectors, ax=axes[1])
+
+axes[0].set_title("Custom", weight="bold")
+axes[1].set_title("GloVe", weight="bold")
+fig.tight_layout()
+fig.savefig("outputs/plots/word_embeddings.pdf", bbox_inches="tight")
