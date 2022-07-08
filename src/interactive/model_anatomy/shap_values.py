@@ -63,5 +63,5 @@ import eli5
 from eli5.lime import TextExplainer
 
 te = TextExplainer(random_state=42, char_based=False)
-te.fit("long ticker i'm buying this is green", pipe.predict_proba)
+te.fit("ticker well i'm glad i stayed short on this. #savagetrading", pipe.predict_proba)
 te.explain_prediction()

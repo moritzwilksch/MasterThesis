@@ -47,7 +47,7 @@ preds = cross_val_predict(
 
 #%%
 print(classification_report(df["label"], preds))
-print(confusion_matrix(df["label"], preds))
+print(confusion_matrix(df["label"], preds, normalize="pred"))
 
 #%%
 def classification_report_to_tex(cr):
@@ -104,7 +104,8 @@ print(confusion_matrix_to_tex(confusion_matrix(df["label"], preds, normalize="tr
 
 #%%
 df["prediction"] = preds
-wrong = df.query("(label=='3' & prediction=='1') | (label=='1' & prediction=='3')")
+# wrong = df.query("(label=='3' & prediction=='1') | (label=='1' & prediction=='3')")
+wrong = df.query("(label=='3' & prediction=='1')")
 # wrong = df.query("label != prediction")
 wrong
 

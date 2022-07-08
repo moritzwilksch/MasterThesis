@@ -21,6 +21,12 @@ stopwords = list(stopwords.words("english"))
 #%%
 df = pl.read_parquet("data/labeled/labeled_tweets.parquet")
 prepper = Preprocessor()
+df = df.with_column(
+    pl.when(pl.col("label") == "0")
+    .then(pl.lit("2"))
+    .otherwise(pl.col("label"))
+    .alias("label")
+)
 
 #%%
 meta_features = df.select(
@@ -61,6 +67,7 @@ df = prepper.process(df)
 #%%
 X = pl.concat([df.select("text"), meta_features], how="horizontal")
 from lightgbm import LGBMClassifier
+
 #%%
 from sklearn.base import BaseEstimator, ClassifierMixin
 
@@ -89,6 +96,8 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
 
 
 #%%
+from sklearn.preprocessing import PolynomialFeatures
+
 model = Pipeline(
     [
         (
@@ -101,11 +110,9 @@ model = Pipeline(
                             [
                                 (
                                     "vectorizer",
-                                    TfidfVectorizer(
-                                        analyzer="char_wb", ngram_range=(4, 4)
-                                    ),
+                                    TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4)),
                                 ),
-                                ("kbest", SelectKBest(k=10_000)),
+                                # ("kbest", SelectKBest(k=10_000)),
                             ]
                         ),
                         "text",
@@ -116,8 +123,8 @@ model = Pipeline(
         ),
         (
             "model",
-            # LogisticRegression(random_state=42, n_jobs=-1, max_iter=450, C=1.42),
-            LGBMWrapper(num_leaves=32),
+            LogisticRegression(random_state=42, n_jobs=-1, max_iter=550, C=1.42),
+            # LGBMWrapper(num_leaves=32),
         ),
     ]
 )
