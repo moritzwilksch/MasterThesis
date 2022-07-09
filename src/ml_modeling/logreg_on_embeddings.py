@@ -1,14 +1,9 @@
 #%%
-import string
 
-import nltk
 import numpy as np
 import pandas as pd
 import polars as pl
 from nltk.corpus import stopwords
-from sklearn.compose import ColumnTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
 from sklearn.model_selection import cross_val_score, train_test_split, cross_val_predict
