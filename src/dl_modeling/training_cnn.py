@@ -18,15 +18,15 @@ if __name__ == "__main__":
             tb_logger = TensorBoardLogger(
                 "lightning_logs", name=f"cnn-split-{split_idx}"
             )
-            data = TweetDataModule(split_idx=split_idx, batch_size=BATCH_SIZE)
+            data = TweetDataModule(split_idx=split_idx, batch_size=BATCH_SIZE, model_type="cnn")
 
             # if trial is None:
             model = CNNSAModel(
                 vocab_size=3_000,
                 token_dropout=0.2,
                 embedding_dim=64,
-                out_channels=8,
-                kernel_size=3,
+                out_channels=32,
+                kernel_size=2,
                 hidden_dim=64,
                 dropout=0.5,
                 lr=1e-3,
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
             # we need to extract the val-set labels from the dataloader
             yval_true = []
-            for _, _, y in data.val_dataloader():
+            for _, y in data.val_dataloader():
                 yval_true.append(y.numpy())
             yval_true = np.concatenate(yval_true)
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 #%%
 def retrain_best_model():
     data = TweetDataModule(
-        split_idx="retrain", batch_size=BATCH_SIZE
+        split_idx="retrain", batch_size=BATCH_SIZE, model_type="cnn"
     )
 
     train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
