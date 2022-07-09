@@ -61,6 +61,12 @@ def get_nearest(sims, word):
 
 import umap
 
+# %%
+import gensim
+
+word_vectors = gensim.models.KeyedVectors.load_word2vec_format(
+    "~/Downloads/glove.6B.50d.txt", binary=False, no_header=True
+)
 #%%
 from sklearn.manifold import TSNE
 
@@ -114,14 +120,15 @@ def visualize_embeddings(embs, projector: str, ax):
 
     _position_override = {
         "put": (0, -0.25),
-        "down": (0, -0.25),
+        "down": (0.15, -0.25),
         "call": (0, -0.2),
-        "bullish": (-0.3, 0),
+        "bullish": (-0.35, 0),
         "green": (0.3, 0),
-        "buy": (-0.17, -0.1),
-        "down": (0.25, 0),
+        "buy": (-0.2, -0.1),
+        "down": (0.35, 0),
         "-9.99": (0, -0.3),
-        "red": (0.1, 0.05),
+        "red": (0.15, 0.05),
+        "chat": (0.05, 0.05),
     }
 
     _va_center = ["green", "call", "bullish", "down"]
@@ -141,7 +148,7 @@ def visualize_embeddings(embs, projector: str, ax):
         ax.annotate(
             text,
             xy,
-            size=14,
+            size=16,
             ha="center",
             va="center" if text in _va_center else "bottom",
         )
@@ -163,12 +170,6 @@ def visualize_embeddings(embs, projector: str, ax):
 #     projector="umap",
 # )
 
-# %%
-import gensim
-
-word_vectors = gensim.models.KeyedVectors.load_word2vec_format(
-    "~/Downloads/glove.6B.50d.txt", binary=False, no_header=True
-)
 
 #%%
 def visualize_glove(word_vectors, ax):
@@ -276,7 +277,7 @@ def visualize_glove(word_vectors, ax):
             text,
             xy=xy,
             xytext=xy if text not in _use_arrow else xytext,
-            size=14,
+            size=16,
             ha="center",
             va="center" if text in _va_center else "bottom",
             arrowprops=None if text not in _use_arrow else ARROWPROPS,

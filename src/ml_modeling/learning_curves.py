@@ -19,7 +19,7 @@ from sklearn.pipeline import Pipeline
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import TransformerSAModel
-from src.utils.plotting import Colors, set_style
+from src.utils.plotting import Colors, set_style, scale_lightness
 from src.utils.preprocessing import Preprocessor
 
 set_style()
@@ -56,14 +56,22 @@ plot_df = pd.DataFrame(
     {"train_size": np.tile(train_sizes, 5), "test_score": test_scores.T.ravel()}
 )
 sns.lineplot(
-    data=plot_df, x="train_size", y="test_score", ax=ax, color=Colors.DARKBLUE.value, lw=3
+    data=plot_df,
+    x="train_size",
+    y="test_score",
+    ax=ax,
+    color=Colors.DARKBLUE.value,
+    lw=3,
+    zorder=10,
 )
 sns.scatterplot(
     data=plot_df.groupby("train_size", as_index=False).mean(),
     x="train_size",
     y="test_score",
     color=Colors.DARKBLUE.value,
-    s=100,
+    s=75,
+    ec=scale_lightness(sns.desaturate(Colors.DARKBLUE.value, 1), 0.5),
+    zorder=20,
 )
 
 ax.grid(True, which="major", axis="y", ls="--")

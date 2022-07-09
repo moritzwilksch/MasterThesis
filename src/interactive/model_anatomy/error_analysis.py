@@ -10,6 +10,7 @@ from sklearn.model_selection import cross_val_predict, KFold
 import matplotlib.pyplot as plt
 import seaborn as sns
 from src.utils.plotting import Colors, set_style
+import numpy as np
 
 set_style()
 
@@ -48,6 +49,17 @@ preds = cross_val_predict(
 #%%
 print(classification_report(df["label"], preds))
 print(confusion_matrix(df["label"], preds, normalize="pred"))
+
+#%%
+mtx = pd.DataFrame(confusion_matrix(df["label"], preds, normalize="pred"))
+s_mtx = mtx.style.apply(
+    lambda s: np.where(s == s.max(), "background-color:#DDDDDD", ""), axis=1
+)
+s_mtx
+
+
+#%%
+print(s_mtx.to_latex(convert_css=True))
 
 #%%
 def classification_report_to_tex(cr):

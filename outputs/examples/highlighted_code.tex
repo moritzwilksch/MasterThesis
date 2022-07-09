@@ -1,0 +1,13 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PY{n}{pip} \PY{n}{install} \PY{n}{pyfin}\PY{o}{\PYZhy{}}\PY{n}{sentiment}
+
+
+\PY{k+kn}{from} \PY{n+nn}{pyfin\PYZus{}sentiment}\PY{n+nn}{.}\PY{n+nn}{model} \PY{k+kn}{import} \PY{n}{SentimentModel}
+
+\PY{c+c1}{\PYZsh{} the model only needs to be downloaded once}
+\PY{n}{SentimentModel}\PY{o}{.}\PY{n}{download}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{small}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+
+\PY{n}{model} \PY{o}{=} \PY{n}{SentimentModel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{small}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+\PY{n}{model}\PY{o}{.}\PY{n}{predict}\PY{p}{(}\PY{p}{[}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Long \PYZdl{}TSLA!!}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Selling my \PYZdl{}AAPL position}\PY{l+s+s2}{\PYZdq{}}\PY{p}{]}\PY{p}{)}
+\PY{c+c1}{\PYZsh{} array([\PYZsq{}1\PYZsq{}, \PYZsq{}3\PYZsq{}], dtype=object)}
+\end{Verbatim}
