@@ -20,7 +20,7 @@ backup:
 	python src/scripts/upload_backup.py
 
 tensorboard:
-	tensorboard --logdir lightning_logs/
+	tensorboard --logdir lightning_logs
 
 rm-dl-artifacts:
 	-rm -rf lightning_logs/

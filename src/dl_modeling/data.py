@@ -4,6 +4,7 @@ import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 import torchtext
 from sklearn.model_selection import KFold, train_test_split
 from torchtext.data.utils import get_tokenizer
@@ -129,7 +130,7 @@ class TweetDataModule(ptl.LightningDataModule):
             if model_type == "recurrent"
             else self.transformer_collate_fn
             if model_type == "transformer"
-            else None
+            else self.cnn_collate_fn
         )
 
         self.all_data = pl.read_parquet("data/labeled/labeled_tweets.parquet")
@@ -251,6 +252,21 @@ class TweetDataModule(ptl.LightningDataModule):
 
         padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
         return padded_sequences, seq_lens, torch.Tensor(labels).long()
+    
+    def cnn_collate_fn(self, batch):
+        text_tensors = []
+        labels = []
+        seq_lens = []
+
+        for text, label in batch:
+            tokens = torch.Tensor(list(self.tokenizer([text]))[0])
+            padded_tokens = F.pad(tokens, (0, 120 - len(tokens)))
+            text_tensors.append(padded_tokens.long())
+            labels.append(label)
+            seq_lens.append(len(tokens))
+
+        # padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
+        return torch.vstack(text_tensors), torch.Tensor(labels).long()
 
     def transformer_collate_fn(self, batch):
         text_tensors = []

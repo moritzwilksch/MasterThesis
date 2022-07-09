@@ -204,6 +204,7 @@ class TransformerSAModel(BaseDLModel):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
 
+
 ###############################################################################
 class BERTSAModel(BaseDLModel):
     BEST_PARAMS = {
@@ -253,6 +254,90 @@ class BERTSAModel(BaseDLModel):
 
     def predict_step(self, batch, batch_idx):
         x, _ = batch
+        y_hat = self.forward(x)
+        return F.softmax(y_hat, dim=1)
+
+    def configure_optimizers(self):
+        return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
+
+###############################################################################
+class CNNSAModel(BaseDLModel):
+    
+    def __init__(
+        self,
+        vocab_size: int,
+        token_dropout: float,
+        embedding_dim: int,
+        out_channels: int,
+        kernel_size: int,
+        hidden_dim: int,
+        dropout: float,
+        lr: float = 1e-3,
+    ):
+        super().__init__()
+
+        # layers
+        self.embedding = nn.Embedding(
+            num_embeddings=vocab_size, embedding_dim=embedding_dim, padding_idx=0
+        )
+        self.token_dropout = nn.Dropout(token_dropout)
+        self.cnn1 = nn.Conv1d(
+            in_channels=embedding_dim,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            padding="same"
+        )
+        self.maxpool = nn.MaxPool1d(kernel_size=kernel_size)
+        self.flatten = nn.Flatten()
+
+        self.dropout1 = nn.Dropout(dropout)
+        self.hidden1 = nn.Linear(int(120 / kernel_size) * out_channels, hidden_dim)
+        self.dropout2 = nn.Dropout(dropout)
+        self.output_layer = nn.Linear(hidden_dim, 3)
+
+    def forward(self, x, _ = None):
+        x = self.embedding(x)
+        x = self.token_dropout(x)
+        
+        # _seq_len, _batch_size, _emb_dim = x.shape
+        _batch_size, _seq_len, _emb_dim = x.shape
+
+        x = torch.reshape(x, (_batch_size, _emb_dim, _seq_len))
+        x = self.cnn1(x)
+        # x = torch.swapdims(x, 0, 1)
+        x = self.maxpool(x)
+        x = self.flatten(x)
+        x = self.dropout1(x)
+        x = self.hidden1(x)
+        x = F.relu(x)
+
+        x = self.dropout2(x)
+        x = self.output_layer(x)
+        x = x.squeeze()
+
+        return x
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.train_accuracy(y_hat, y)
+        self.log("loss", loss, batch_size=BATCH_SIZE)
+        self.log("train_acc", self.train_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+        return {"loss": loss}
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.val_accuracy(y_hat, y)
+        self.val_auc(y_hat, y)
+        self.log("val_loss", loss, batch_size=BATCH_SIZE)
+        self.log("val_auc", self.val_auc, prog_bar=True, batch_size=BATCH_SIZE)
+        self.log("val_acc", self.val_accuracy, prog_bar=True, batch_size=BATCH_SIZE)
+
+    def predict_step(self, batch, batch_idx):
+        x, y = batch
         y_hat = self.forward(x)
         return F.softmax(y_hat, dim=1)
 
