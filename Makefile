@@ -13,7 +13,7 @@ label:
 	python src/labeling/labeling_tool.py
 
 dashboard:
-	optuna-dashboard "sqlite:///tuning/dl_optuna_transformer.db"  --port 1205
+	optuna-dashboard "sqlite:///tuning/optuna.db"  --port 1205
 	# optuna-dashboard "sqlite:///tuning/dl_optuna_bert.db"  --port 1205
 
 backup:

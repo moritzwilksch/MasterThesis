@@ -28,7 +28,7 @@ if __name__ == "__main__":
                     vocab_size=3_000,
                     nhead=4,
                     **{
-                        "dim_ff": 2048,
+                        "dim_ff": 140,
                         "dropout": 0.28603031004494467,
                         "embedding_dim": 72,
                         "hidden_dim": 237,

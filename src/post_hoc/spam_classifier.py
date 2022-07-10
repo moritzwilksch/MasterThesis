@@ -32,7 +32,7 @@ y = df["label"]
 pipe = Pipeline(
     [
         ("vectorizer", TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4))),
-        ("model", LogisticRegression(C=1.7, max_iter=450)),
+        ("model", LogisticRegression(C=1.7, max_iter=450, n_jobs=-1)),
     ]
 )
 
@@ -56,8 +56,9 @@ roc_auc_score(y, pipe.predict_proba(X)[:, 1])
 #%%
 from sklearn.model_selection import cross_val_predict
 
-preds = cross_val_predict(pipe, X, y)
+preds = cross_val_predict(pipe, X, y, method="predict")
 
 #%%
 from sklearn.metrics import classification_report
 print(classification_report(y, preds))
+# print(roc_auc_score(y.values, preds[:, 1]))
