@@ -21,7 +21,8 @@ CLASS_MAPPING = {
     "3": "nospam",
 }
 prepper = Preprocessor()
-df = prepper.process(pl.DataFrame(df)).to_pandas()
+df = prepper.process(pl.DataFrame(df))
+df = df.to_pandas()
 # df = df.assign(label=df["label"].map(CLASS_MAPPING).astype("category"))
 
 X = df["text"]

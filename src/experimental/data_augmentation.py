@@ -9,8 +9,11 @@ import polars as pl
 import torchtext
 from bpemb import BPEmb
 from lightgbm import LGBMClassifier
-from sklearn.ensemble import (ExtraTreesClassifier, GradientBoostingClassifier,
-                              RandomForestClassifier)
+from sklearn.ensemble import (
+    ExtraTreesClassifier,
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+)
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
@@ -28,7 +31,7 @@ mlflow.set_experiment("other-fast-models")
 
 #%%
 
-TOK = "bpe"
+TOK = "custom"
 
 if TOK == "bpe":
     tokenizer = BPEmb(lang="en", vs=5_000).encode_ids
@@ -63,23 +66,24 @@ def tokenize(s):
 
 
 #%%
-
 X = tokenize(df["text"])
 y = df["label"].to_numpy()
 
 #%%
 # X = tokenize(df["text"])
 from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
 
-stemmer = PorterStemmer()
+
+# stemmer = PorterStemmer()
 # df = df.with_column(
 #     pl.col("text")
 #     .str.split(" ")
 #     .arr.eval(pl.element().apply(lambda x: stemmer.stem(x)))
 #     .arr.join(" ")
 # )
-# X = df["text"]#.to_pandas()
-# y = df["label"]#.to_list()
+# X = df["text"].to_pandas()
+# y = df["label"].to_list()
 from textaugment import EDA
 
 dftrainval, dftest = train_test_split(df.to_pandas())
@@ -137,53 +141,54 @@ with mlflow.start_run():
         [
             ("vectorizer", TfidfVectorizer()),
             # ("vectorizer", TfidfTransformer()),
-            ("kbest", SelectKBest()),
-            # ("model", LogisticRegression()),
-            ("model", LGBMWrapper()),
+            # ("kbest", SelectKBest()),
+            ("model", LogisticRegression()),
+            # ("model", LGBMWrapper()),
         ]
     )
 
     params = {
         "vectorizer__analyzer": "char_wb",
         "vectorizer__ngram_range": (4, 4),
-        "kbest__k": KBEST,
-        # "model__C": 1.7,
-        # "model__n_jobs": 3,
-        # "model__max_iter": 350,
-        "model__num_leaves": 32,
+        "vectorizer__max_features": 10_000,
+        # "kbest__k": KBEST,
+        "model__C": 1.7,
+        "model__n_jobs": 3,
+        "model__max_iter": 350,
+        # "model__num_leaves": 32,
     }
 
     mlflow.log_params(params)
     mlflow.log_param("modeltype", model["model"].__class__.__name__)
 
-    # scores = cross_val_score(
-    #     # MultinomialNB(),
-    #     model.set_params(**params),
-    #     dftrainval["text"],
-    #     dftrainval["label"],
-    #     # X,
-    #     # y,
-    #     cv=5,
-    #     scoring=make_scorer(roc_auc_score, needs_proba=True, multi_class="ovr"),
-    #     n_jobs=-1,
-    # )
+    scores = cross_val_score(
+        # MultinomialNB(),
+        model.set_params(**params),
+        dftrainval["text"],
+        dftrainval["label"],
+        # X,
+        # y,
+        cv=5,
+        scoring=make_scorer(roc_auc_score, needs_proba=True, multi_class="ovr"),
+        n_jobs=-1,
+    )
 
-    scores = []
-    for trainidx, validx in KFold(n_splits=5, shuffle=True).split(dftrainval):
-        _train = dftrainval.iloc[trainidx]
-        _val = dftrainval.iloc[validx]
+    # scores = []
+    # for trainidx, validx in KFold(n_splits=5, shuffle=True).split(dftrainval):
+    #     _train = dftrainval.iloc[trainidx]
+    #     _val = dftrainval.iloc[validx]
 
-        augmented = pl.from_pandas(_train).select(
-            [pl.col("text").apply(augment_text).alias("text"), pl.col("label")]
-        )
+    #     augmented = pl.from_pandas(_train).select(
+    #         [pl.col("text").apply(augment_text).alias("text"), pl.col("label")]
+    #     )
 
-        _train = pd.concat([_train.drop("id", axis=1), augmented.to_pandas()])
+    #     _train = pd.concat([_train.drop("id", axis=1), augmented.to_pandas()])
 
-        model.set_params(**params)
-        model.fit(_train["text"], _train["label"])
+    #     model.set_params(**params)
+    #     model.fit(_train["text"], _train["label"])
 
-        y_pred = model.predict_proba(_val["text"])
-        scores.append(roc_auc_score(_val["label"], y_pred, multi_class="ovr"))
+    #     y_pred = model.predict_proba(_val["text"])
+    #     scores.append(roc_auc_score(_val["label"], y_pred, multi_class="ovr"))
 
     print(f"Mean score: {np.mean(scores):.3f} (SD: {np.std(scores):.3f}), {scores}")
     # mlflow.lightgbm.log_model(model, "model")

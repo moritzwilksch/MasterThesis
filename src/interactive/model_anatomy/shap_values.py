@@ -62,6 +62,19 @@ predict(["long", "short", "", " ", "hello this is a longer test 00", "ÖÖÖ"]).
 import eli5
 from eli5.lime import TextExplainer
 
-te = TextExplainer(random_state=42, char_based=False)
-te.fit("ticker well i'm glad i stayed short on this. #savagetrading", pipe.predict_proba)
+te = TextExplainer(random_state=42, char_based=True)
+te.fit("man", pipe.predict_proba)
 te.explain_prediction()
+
+#%%
+countries= ["russia", "germany", "us", "hawaii", "netherlands", "china", "libya", "namibia", "pakistan"]
+pred_mtx = np.zeros((len(countries), 3))
+for idx, country in enumerate(countries):
+    prediction = pipe.predict_proba([country])
+    print(country, prediction)
+    pred_mtx[idx] = prediction
+
+pred_mtx
+
+#%%
+(pred_mtx - pred_mtx.mean(axis=0)) / pred_mtx.std(axis=0)

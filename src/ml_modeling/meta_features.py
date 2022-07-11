@@ -76,7 +76,7 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
     def __init__(self, num_leaves: int = 32):
         self.num_leaves = num_leaves
         self.classes_ = ["1", "2", "3"]
-        self.model = LGBMClassifier(n_estimators=250, num_leaves=self.num_leaves)
+        self.model = LGBMClassifier(boosting_type="gbdt", n_estimators=200, num_leaves=self.num_leaves)
 
     def fit(self, X, y):
         xtrain, xval, ytrain, yval = train_test_split(X, y, test_size=0.1)
@@ -123,8 +123,8 @@ model = Pipeline(
         ),
         (
             "model",
-            LogisticRegression(random_state=42, n_jobs=-1, max_iter=550, C=1.42),
-            # LGBMWrapper(num_leaves=32),
+            # LogisticRegression(random_state=42, n_jobs=-1, max_iter=550, C=1.42),
+            LGBMWrapper(num_leaves=32),
         ),
     ]
 )
@@ -140,3 +140,21 @@ score = cross_val_score(
 )
 
 print(np.mean(score), score)
+
+#%%
+model = model.fit(X.to_pandas(), df["label"].to_pandas())
+#%%
+from src.utils.plotting import set_style
+set_style()
+from lightgbm.plotting import plot_tree, plot_importance
+plot_tree(model["model"].model, dpi=800)
+
+#%%
+preds = model.predict(X.to_pandas())
+preddf = df.to_pandas().copy()
+preddf["prediction"] = preds
+preddf["prediction"] = preddf["prediction"].astype("string")
+
+wrong = preddf.query("(label=='3' & prediction=='1')")
+# wrong = df.query("label != prediction")
+wrong

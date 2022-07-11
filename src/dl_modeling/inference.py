@@ -15,7 +15,7 @@ from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
 from src.utils.preprocessing import Preprocessor
 
 #%%
-USE_MODEL = "bert"
+USE_MODEL = "transformer"
 
 prepper = Preprocessor()
 if USE_MODEL == "transformer":
