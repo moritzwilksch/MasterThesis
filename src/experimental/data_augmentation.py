@@ -142,8 +142,8 @@ with mlflow.start_run():
             ("vectorizer", TfidfVectorizer()),
             # ("vectorizer", TfidfTransformer()),
             # ("kbest", SelectKBest()),
-            ("model", LogisticRegression()),
-            # ("model", LGBMWrapper()),
+            # ("model", LogisticRegression()),
+            ("model", LGBMWrapper()),
         ]
     )
 

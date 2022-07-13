@@ -117,8 +117,8 @@ print(confusion_matrix_to_tex(confusion_matrix(df["label"], preds, normalize="tr
 #%%
 df["prediction"] = preds
 # wrong = df.query("(label=='3' & prediction=='1') | (label=='1' & prediction=='3')")
-wrong = df.query("(label=='3' & prediction=='1')")
-# wrong = df.query("label != prediction")
+# wrong = df.query("(label=='3' & prediction=='1')")
+wrong = df.query("(label != prediction) & (label == '3')")
 wrong
 
 #%%

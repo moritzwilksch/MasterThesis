@@ -19,6 +19,50 @@ all_data = all_data.with_column(
 prepper = Preprocessor()
 all_data = prepper.process(all_data).to_pandas()
 
+
+
+# ###################################
+# import spacy
+# nlp = spacy.load("en_core_web_sm", exclude=["parser", "ner", "textcat"])
+# not_stop_words = [
+#     "up",
+#     "down",
+#     "above",
+#     "below",
+#     "against",
+#     "between",
+#     "bottom",
+#     "top",
+#     "call",
+#     "put",
+#     "least",
+#     "most",
+#     "much",
+#     "n't",
+#     "off",
+#     "under",
+#     "over"
+# ]
+# for elem in not_stop_words:
+#     try:
+#         nlp.Defaults.stop_words.remove(elem)
+#     except KeyError:
+#         pass
+
+# preprocessed_docs = []
+# for doc in nlp.pipe(all_data["text"].to_list(), batch_size=64, n_process=-1):
+#     preprocessed_docs.append(" ".join(w.text for w in doc))
+# all_data["text"] = preprocessed_docs
+# ###################################
+
+
+
+
+
+
+
+
+
 xtrainval, xtest, ytrainval, ytest = train_test_split(
     all_data["text"],
     all_data["label"],

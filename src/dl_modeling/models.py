@@ -164,7 +164,7 @@ class TransformerSAModel(BaseDLModel):
         x = torch.swapaxes(x, 0, 1)
 
         x = self.token_dropout(x)
-        x = x + self.transformer(x, src_key_padding_mask=masks)  # skip connection
+        x = self.transformer(x, src_key_padding_mask=masks)
         x = self.dropout1(x)
         x = torch.mean(x, dim=0)
 
