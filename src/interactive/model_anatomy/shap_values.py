@@ -67,7 +67,17 @@ te.fit("man", pipe.predict_proba)
 te.explain_prediction()
 
 #%%
-countries= ["russia", "germany", "us", "hawaii", "netherlands", "china", "libya", "namibia", "pakistan"]
+countries = [
+    "russia",
+    "germany",
+    "us",
+    "hawaii",
+    "netherlands",
+    "china",
+    "libya",
+    "namibia",
+    "pakistan",
+]
 pred_mtx = np.zeros((len(countries), 3))
 for idx, country in enumerate(countries):
     prediction = pipe.predict_proba([country])

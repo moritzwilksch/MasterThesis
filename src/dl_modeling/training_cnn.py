@@ -18,7 +18,9 @@ if __name__ == "__main__":
             tb_logger = TensorBoardLogger(
                 "lightning_logs", name=f"cnn-split-{split_idx}"
             )
-            data = TweetDataModule(split_idx=split_idx, batch_size=BATCH_SIZE, model_type="cnn")
+            data = TweetDataModule(
+                split_idx=split_idx, batch_size=BATCH_SIZE, model_type="cnn"
+            )
 
             # if trial is None:
             model = CNNSAModel(
@@ -112,9 +114,7 @@ if __name__ == "__main__":
 
 #%%
 def retrain_best_model():
-    data = TweetDataModule(
-        split_idx="retrain", batch_size=BATCH_SIZE, model_type="cnn"
-    )
+    data = TweetDataModule(split_idx="retrain", batch_size=BATCH_SIZE, model_type="cnn")
 
     train_dataloader, mini_val_dataloader = data.trainval_dataloader_for_retraining()
 

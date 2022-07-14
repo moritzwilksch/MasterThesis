@@ -252,7 +252,7 @@ class TweetDataModule(ptl.LightningDataModule):
 
         padded_sequences = nn.utils.rnn.pad_sequence(text_tensors)
         return padded_sequences, seq_lens, torch.Tensor(labels).long()
-    
+
     def cnn_collate_fn(self, batch):
         text_tensors = []
         labels = []

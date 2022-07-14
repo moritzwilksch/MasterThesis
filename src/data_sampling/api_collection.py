@@ -14,8 +14,8 @@ load_dotenv(".env")
 
 
 class TwitterAPICollector:
-    def __init__(self, params: dict) -> None:
-        self.api = TwitterAPI()
+    def __init__(self, params: dict, **kwargs) -> None:
+        self.api = TwitterAPI(**kwargs)
         self.params = params
 
     def collect(self):
@@ -61,17 +61,17 @@ class TwitterAPICollector:
                 log.warn("No data to write!")
             else:
                 # persist to DB
-                DB.thesis.prod_tweet.insert_many(data_to_write)
+                DB.thesis.gme_tweets.insert_many(data_to_write)
                 log.info(f"Saved {len(data_to_write)} tweets. newest_id = {newest_id}")
 
             time.sleep(3.5)
 
 
-params = {
-    "start_time": "2022-04-01T00:00:00Z",  # oldest time
-    "end_time": "2022-05-01T00:00:00Z",  # newest, most recent time
-    "max_results": 500,
-}
+# params = {
+#     "start_time": "2022-04-01T00:00:00Z",  # oldest time
+#     "end_time": "2022-05-01T00:00:00Z",  # newest, most recent time
+#     "max_results": 500,
+# }
 
-collector = TwitterAPICollector(params=params)
-collector.collect()
+# collector = TwitterAPICollector(params=params)
+# collector.collect()

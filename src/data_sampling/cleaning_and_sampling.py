@@ -11,7 +11,8 @@ DB = get_client()
 
 #%%
 df = pl.read_parquet(
-    "data/raw/db_export_small.parquet"
+    # "data/raw/db_export_small.parquet"
+    "data/raw/gme_tweets.parquet"
 )  # small only has date, text, id
 
 #%%

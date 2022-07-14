@@ -6,8 +6,11 @@ import joblib
 import numpy as np
 import pandas as pd
 from scipy.special import softmax
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          TFAutoModelForSequenceClassification)
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TFAutoModelForSequenceClassification,
+)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 

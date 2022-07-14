@@ -8,8 +8,11 @@ from rich.prompt import Prompt
 from scipy.special import softmax
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import KFold
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          TFAutoModelForSequenceClassification)
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    TFAutoModelForSequenceClassification,
+)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.ml_modeling.models import BaseSklearnSAModel, LogisticRegressionModel

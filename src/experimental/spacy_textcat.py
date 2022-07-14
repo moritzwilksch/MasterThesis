@@ -48,7 +48,7 @@ not_stop_words = [
     "n't",
     "off",
     "under",
-    "over"
+    "over",
 ]
 for elem in not_stop_words:
     try:
@@ -89,7 +89,7 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
             eval_set=[(xval, yval)],
             early_stopping_rounds=25,
             eval_metric="auc_mu",
-            verbose=10
+            verbose=10,
         )
 
     def predict(self, X):
@@ -104,8 +104,8 @@ model = Pipeline(
         ("vectorizer", TfidfVectorizer()),
         # ("vectorizer", TfidfTransformer()),
         ("kbest", SelectKBest(score_func=chi2)),
-        # ("model", LogisticRegression()),
-        ("model", LGBMWrapper()),
+        ("model", LogisticRegression()),
+        # ("model", LGBMWrapper()),
     ]
 )
 
@@ -114,10 +114,10 @@ params = {
     "vectorizer__ngram_range": (3, 5),
     # "vectorizer__max_features": 10_000,
     "kbest__k": 10_000,
-    # "model__C": 2,
-    # "model__n_jobs": 5,
-    # "model__max_iter": 350,
-    "model__num_leaves": 32,
+    "model__C": 2,
+    "model__n_jobs": 5,
+    "model__max_iter": 350,
+    # "model__num_leaves": 32,
 }
 
 scores = cross_val_score(
@@ -141,6 +141,7 @@ preds = cross_val_predict(
 
 #%%
 import pandas as pd
+
 pred_df = pd.DataFrame(
     {"text": preprocessed_docs, "label": df["label"].to_list(), "pred": preds}
 )

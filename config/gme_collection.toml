@@ -1,0 +1,2 @@
+raw_query="$GME"
+query_options="lang:en -is:retweet -is:nullcast -has:images -has:videos"

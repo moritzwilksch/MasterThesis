@@ -14,8 +14,7 @@ DB = get_client()
 from rich import print
 
 from src.utils.log import log
-from src.utils.plotting import (Colors, scale_lightness, set_style,
-                                when_then_else)
+from src.utils.plotting import Colors, scale_lightness, set_style, when_then_else
 from src.utils.twitter_api import TwitterAPI
 
 coll = DB["thesis"]["tweet_counts"]

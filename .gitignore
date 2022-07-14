@@ -13,6 +13,8 @@ lightning_logs/*
 outputs/tokenizers/*
 data/distilbert/*
 mlruns/*
+data/gme_casestudy/*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

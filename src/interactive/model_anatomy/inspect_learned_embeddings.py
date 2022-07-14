@@ -14,7 +14,11 @@ from matplotlib import projections
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.dl_modeling.data import BERTTensorDataModule, BertTensorDataSet, TweetDataModule
+from src.dl_modeling.data import (
+    BERTTensorDataModule,
+    BertTensorDataSet,
+    TweetDataModule,
+)
 from src.dl_modeling.models import BERTSAModel, RecurrentSAModel, TransformerSAModel
 from src.utils.plotting import Colors, scale_lightness, set_style
 from src.utils.preprocessing import Preprocessor
@@ -240,7 +244,7 @@ def visualize_glove(word_vectors, ax):
         "down": (0, -0.5),
         "bullish": (0.25, 0),
         "bearish": (-0.1, 0.25),
-        "question": (0.3, 0.2)
+        "question": (0.3, 0.2),
     }
 
     _va_center = ["bullish", "long"]  # ["green", "call", "bullish", "down"]
@@ -289,6 +293,7 @@ def visualize_glove(word_vectors, ax):
 
     sns.despine()
     # fig.tight_layout()
+
 
 fig, axes = plt.subplots(1, 2, figsize=(16, 7))
 

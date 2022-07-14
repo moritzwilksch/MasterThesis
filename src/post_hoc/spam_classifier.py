@@ -93,5 +93,6 @@ def classification_report_to_tex(cr):
 
     return "\\\\\n".join(lines) + "\\\\"
 
+
 #%%
 print(classification_report_to_tex(classification_report(y, preds, output_dict=True)))

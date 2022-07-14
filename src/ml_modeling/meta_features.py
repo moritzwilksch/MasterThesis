@@ -76,7 +76,9 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
     def __init__(self, num_leaves: int = 32):
         self.num_leaves = num_leaves
         self.classes_ = ["1", "2", "3"]
-        self.model = LGBMClassifier(boosting_type="gbdt", n_estimators=200, num_leaves=self.num_leaves)
+        self.model = LGBMClassifier(
+            boosting_type="gbdt", n_estimators=200, num_leaves=self.num_leaves
+        )
 
     def fit(self, X, y):
         xtrain, xval, ytrain, yval = train_test_split(X, y, test_size=0.1)
@@ -110,7 +112,9 @@ model = Pipeline(
                             [
                                 (
                                     "vectorizer",
-                                    TfidfVectorizer(analyzer="char_wb", ngram_range=(4, 4)),
+                                    TfidfVectorizer(
+                                        analyzer="char_wb", ngram_range=(4, 4)
+                                    ),
                                 ),
                                 # ("kbest", SelectKBest(k=10_000)),
                             ]
@@ -145,8 +149,10 @@ print(np.mean(score), score)
 model = model.fit(X.to_pandas(), df["label"].to_pandas())
 #%%
 from src.utils.plotting import set_style
+
 set_style()
 from lightgbm.plotting import plot_tree, plot_importance
+
 plot_tree(model["model"].model, dpi=800)
 
 #%%

@@ -13,8 +13,11 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.metrics import roc_auc_score
 from transformers import AutoModel, AutoTokenizer, pipeline
 
-from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
-                                  TweetDataModule)
+from src.dl_modeling.data import (
+    BERTTensorDataModule,
+    BertTensorDataSet,
+    TweetDataModule,
+)
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 BATCH_SIZE = 64
@@ -204,7 +207,6 @@ class TransformerSAModel(BaseDLModel):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
 
-
 ###############################################################################
 class BERTSAModel(BaseDLModel):
     BEST_PARAMS = {
@@ -260,9 +262,9 @@ class BERTSAModel(BaseDLModel):
     def configure_optimizers(self):
         return torch.optim.AdamW(self.parameters(), lr=self.hparams.lr)
 
+
 ###############################################################################
 class CNNSAModel(BaseDLModel):
-    
     def __init__(
         self,
         vocab_size: int,
@@ -285,7 +287,7 @@ class CNNSAModel(BaseDLModel):
             in_channels=embedding_dim,
             out_channels=out_channels,
             kernel_size=kernel_size,
-            padding="same"
+            padding="same",
         )
         self.maxpool = nn.MaxPool1d(kernel_size=kernel_size)
         self.flatten = nn.Flatten()
@@ -295,10 +297,10 @@ class CNNSAModel(BaseDLModel):
         self.dropout2 = nn.Dropout(dropout)
         self.output_layer = nn.Linear(hidden_dim, 3)
 
-    def forward(self, x, _ = None):
+    def forward(self, x, _=None):
         x = self.embedding(x)
         x = self.token_dropout(x)
-        
+
         # _seq_len, _batch_size, _emb_dim = x.shape
         _batch_size, _seq_len, _emb_dim = x.shape
 

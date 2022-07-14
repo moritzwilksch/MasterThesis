@@ -1,8 +1,7 @@
 #%%
 from numpy import isin
 
-from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
-                                    TransformerSAModel)
+from src.dl_modeling.models import BERTSAModel, RecurrentSAModel, TransformerSAModel
 from src.ml_modeling.models import LogisticRegressionModel, SVMModel
 
 #%%
