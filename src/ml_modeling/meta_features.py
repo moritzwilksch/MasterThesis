@@ -70,7 +70,7 @@ from lightgbm import LGBMClassifier
 
 #%%
 from sklearn.base import BaseEstimator, ClassifierMixin
-
+from catboost import CatBoostClassifier, CatboostError
 
 class LGBMWrapper(BaseEstimator, ClassifierMixin):
     def __init__(self, num_leaves: int = 32):
@@ -79,6 +79,7 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
         self.model = LGBMClassifier(
             boosting_type="gbdt", n_estimators=200, num_leaves=self.num_leaves
         )
+        # self.model = CatBoostClassifier()
 
     def fit(self, X, y):
         xtrain, xval, ytrain, yval = train_test_split(X, y, test_size=0.1)
@@ -98,7 +99,6 @@ class LGBMWrapper(BaseEstimator, ClassifierMixin):
 
 
 #%%
-from sklearn.preprocessing import PolynomialFeatures
 
 model = Pipeline(
     [

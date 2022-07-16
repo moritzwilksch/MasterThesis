@@ -23,9 +23,9 @@ from spacy import displacy
 nlp = spacy.load("en_core_web_sm", exclude=["parser", "ner", "textcat"])
 
 #%%
-doc = nlp("big bigger biggest $12.34, +4%, and, this ...")
+doc = nlp("big bigger biggest $12.34, +4%, and, this ain't good ... i'm selling a put")
 for token in doc:
-    print(token.text, token.lemma_, token.is_punct)
+    print(token.text, token.lemma_, token.is_punct, list(token.children))
 
 #%%
 
