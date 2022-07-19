@@ -25,9 +25,12 @@ DISPLAY_NAMES = {
 data = toml.load("outputs/static/model_test_scores.toml")
 scores = pd.DataFrame({k: data[k]["test_scores"] for k in data})
 
-finsome_data = toml.load("outputs/static/model_scores_on_finsome.toml")
+external_data = toml.load("outputs/static/model_scores_external_data.toml")
 finsome_scores = pd.DataFrame(
-    {k: finsome_data[k]["finsome_score"] for k in finsome_data}
+    {k: external_data[k]["finsome_score"] for k in external_data}
+)
+semeval_scores = pd.DataFrame(
+    {k: external_data[k]["semeval_score"] for k in external_data}
 )
 
 times = pd.DataFrame({k: data[k]["times_taken"] for k in data})
@@ -76,7 +79,7 @@ def plot_scores(score_df, ax):
     # ax.legend(framealpha=1)
     ax.text(
         x=1.5,
-        y=0.87,
+        y=score_df.max(axis=1).values.ravel()[0] + 0.02,
         s="Existing Models",
         weight="bold",
         color=Colors.YELLOW.value,
@@ -84,7 +87,7 @@ def plot_scores(score_df, ax):
     )
     ax.text(
         x=6,
-        y=0.87,
+        y=score_df.max(axis=1).values.ravel()[0] + 0.02,
         s="Proposed Models",
         weight="bold",
         color=Colors.DARKBLUE.value,
@@ -211,22 +214,38 @@ fig.savefig(
 
 
 #%%
-fig, ax = plt.subplots(figsize=(15, 5))
-plot_scores(finsome_scores, ax)
+fig, axes = plt.subplots(2, 1, figsize=(15, 10))
+plot_scores(finsome_scores, axes[0])
+plot_scores(semeval_scores, axes[1])
 
-ax.set_ylim(0.49, 0.86)
-ax.set_ylabel("ROC AUC on Fin-SoMe", labelpad=15, weight="bold")
-ax.tick_params(axis="x", length=0)
-ax.set_xlim(-0.25, 8.25)
-ax.set_xlabel("Model", weight="bold", labelpad=15)
-ax.set_xticklabels(
-    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
+axes[0].set_ylim(0.49, 0.76)
+axes[0].set_ylabel("ROC AUC on Fin-SoMe", labelpad=15, weight="bold")
+axes[0].tick_params(axis="x", length=0)
+axes[0].set_xlim(-0.25, 8.25)
+axes[0].set_xlabel("Model", weight="bold", labelpad=15)
+axes[0].set_xticklabels(
+    [DISPLAY_NAMES.get(name.get_text()) for name in axes[0].get_xticklabels()]
+)
+axes[0].set_title("Fin-SoMe", weight="bold")
+axes[1].set_title("SemEval", weight="bold")
+
+axes[0].grid(axis="y", ls="--", color="black", alpha=0.25)
+axes[1].set_ylim(0.49, 0.77)
+axes[1].set_ylabel("ROC AUC on SemEval", labelpad=15, weight="bold")
+axes[1].tick_params(axis="x", length=0)
+axes[1].set_xlim(-0.25, 8.25)
+axes[1].set_xlabel("Model", weight="bold", labelpad=15)
+axes[1].set_xticklabels(
+    [DISPLAY_NAMES.get(name.get_text()) for name in axes[1].get_xticklabels()]
 )
 
-ax.grid(axis="y", ls="--", color="black", alpha=0.25)
+axes[1].grid(axis="y", ls="--", color="black", alpha=0.25)
+
 
 sns.despine(bottom=True)
 plt.tight_layout()
+plt.subplots_adjust(bottom=0, top=1)
+
 
 fig.savefig(
     "outputs/plots/model_performance_finsome.pdf",
