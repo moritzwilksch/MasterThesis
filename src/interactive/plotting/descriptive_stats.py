@@ -14,6 +14,8 @@ set_style()
 df = pd.read_parquet("data/labeled/labeled_tweets.parquet")
 df = df.assign(label=lambda d: d["label"].replace("0", "2"))
 finsome = pd.read_csv("data/finSoMe/finsome.csv")
+semeval = pd.read_parquet("data/semeval/semeval_clean.parquet")
+
 #%%
 dist = df["label"].value_counts(normalize=True).sort_index()
 dist_finsome = finsome["market_sentiment"].value_counts(normalize=True).sort_index()
@@ -35,24 +37,35 @@ def plot_class_distribution():
         )["label"]
         .value_counts(normalize=True)
     ).sort_index()
-    height = 0.32
+
+    plot_df_semeval = semeval["label"].value_counts(normalize=True).sort_index()
+
+    _height = 0.2
+    _yshift = 0.24
     ax.barh(
-        y=np.arange(3) + 0.19,
+        y=np.arange(3) + _yshift,
         width=plot_df,
-        height=height,
+        height=_height,
         color=Colors.DARKBLUE.value,
         label="pyFin",
-        # hatch="\\\\",
         ec=scale_lightness(sns.desaturate(Colors.DARKBLUE.value, 1), 0.4),
     )
     ax.barh(
-        y=np.arange(3) - 0.19,
+        y=np.arange(3),
         width=plot_df_finsome,
-        color="0.75",
-        height=height,
+        color=Colors.GREEN.value,
+        height=_height,
         label="Fin-SoMe",
-        # hatch="//",
-        ec=scale_lightness(sns.desaturate("#CCCCCC", 1), 0.5),
+        ec=scale_lightness(sns.desaturate(Colors.GREEN.value, 1), 0.5),
+    )
+
+    ax.barh(
+        y=np.arange(3) - _yshift,
+        width=plot_df_semeval,
+        color=Colors.YELLOW.value,
+        height=_height,
+        label="SemEval",
+        ec=scale_lightness(sns.desaturate(Colors.YELLOW.value, 1), 0.5),
     )
     sns.despine(left=True)
 
@@ -73,17 +86,23 @@ def plot_class_distribution():
 plot_class_distribution()
 
 #%%
-def plot_doc_length(df, finsome):
+def plot_doc_length(df, finsome, semeval):
     pyfin = pl.Series("text", df["text"]).to_frame()
     finsome = pl.Series("text", finsome["tweet"]).to_frame()
+    semeval = pl.Series("text", semeval["text"]).to_frame()
 
     pyfin_nwords = pyfin.select(pl.col("text").str.split(" ").arr.lengths())
     finsome_nwords = finsome.select(pl.col("text").str.split(" ").arr.lengths())
+    semeval_nwords = semeval.select(pl.col("text").str.split(" ").arr.lengths())
 
     plot_df = pd.DataFrame(
         {
-            "words": pl.concat([pyfin_nwords, finsome_nwords]).to_numpy().ravel(),
-            "Dataset": ["pyFin"] * pyfin.height + ["Fin-SoMe"] * finsome.height,
+            "words": pl.concat([pyfin_nwords, finsome_nwords, semeval_nwords])
+            .to_numpy()
+            .ravel(),
+            "Dataset": ["pyFin"] * pyfin.height
+            + ["Fin-SoMe"] * finsome.height
+            + ["SemEval"] * semeval.height,
         }
     )
 
@@ -91,15 +110,16 @@ def plot_doc_length(df, finsome):
 
     fig, ax = plt.subplots(figsize=(17, 6))
 
-    sns.histplot(
+    _ax_finsome = sns.histplot(
         data=plot_df.query("Dataset == 'Fin-SoMe'"),
         x="words",
         hue="Dataset",
         ax=ax,
         binwidth=1,
-        palette=[Colors.GREEN.value, Colors.DARKBLUE.value],
+        palette=[Colors.GREEN.value, Colors.YELLOW.value, Colors.DARKBLUE.value],
         alpha=0.6,
         edgecolor=Colors.GREEN.value,
+        label="Fin-SoMe",
     )
 
     sns.histplot(
@@ -108,10 +128,25 @@ def plot_doc_length(df, finsome):
         hue="Dataset",
         ax=ax,
         binwidth=1,
-        palette=[Colors.GREEN.value, Colors.DARKBLUE.value],
+        palette=[Colors.GREEN.value, Colors.YELLOW.value, Colors.DARKBLUE.value],
         alpha=0.6,
         edgecolor=Colors.DARKBLUE.value,
+        label="pyFin",
     )
+
+    sns.histplot(
+        data=plot_df.query("Dataset == 'SemEval'"),
+        x="words",
+        hue="Dataset",
+        ax=ax,
+        binwidth=1,
+        palette=[Colors.GREEN.value, Colors.YELLOW.value, Colors.DARKBLUE.value],
+        alpha=0.6,
+        edgecolor=Colors.YELLOW.value,
+        label="SemEval",
+    )
+
+    ax.legend()
 
     sns.despine()
 
@@ -125,6 +160,6 @@ def plot_doc_length(df, finsome):
     )
 
 
-plot_doc_length(df, finsome)
+plot_doc_length(df, finsome, semeval)
 
 #%%
