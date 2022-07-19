@@ -10,12 +10,8 @@ from matplotlib import projections
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    roc_auc_score,
-)
+from sklearn.metrics import (accuracy_score, classification_report,
+                             confusion_matrix, roc_auc_score)
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.svm import SVC

@@ -1,13 +1,15 @@
 #%%
-import pandas as pd
+import datetime
+
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
-from src.utils.plotting import set_style, Colors
 from pyfin_sentiment.model import SentimentModel
-import datetime
+
+from src.utils.plotting import Colors, set_style
 
 set_style()
 

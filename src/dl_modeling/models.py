@@ -13,11 +13,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.metrics import roc_auc_score
 from transformers import AutoModel, AutoTokenizer, pipeline
 
-from src.dl_modeling.data import (
-    BERTTensorDataModule,
-    BertTensorDataSet,
-    TweetDataModule,
-)
+from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
+                                  TweetDataModule)
 
 tb_logger = TensorBoardLogger("lightning_logs", name="recurrent")
 BATCH_SIZE = 64

@@ -8,18 +8,13 @@ import seaborn as sns
 from nltk.corpus import stopwords
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
-from sklearn.model_selection import (
-    KFold,
-    cross_val_predict,
-    cross_val_score,
-    learning_curve,
-    train_test_split,
-)
+from sklearn.model_selection import (KFold, cross_val_predict, cross_val_score,
+                                     learning_curve, train_test_split)
 from sklearn.pipeline import Pipeline
 
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import TransformerSAModel
-from src.utils.plotting import Colors, set_style, scale_lightness
+from src.utils.plotting import Colors, scale_lightness, set_style
 from src.utils.preprocessing import Preprocessor
 
 set_style()

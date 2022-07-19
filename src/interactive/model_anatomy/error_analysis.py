@@ -1,16 +1,18 @@
 #%%
 from random import setstate
+
 import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import polars as pl
-from src.ml_modeling.models import LogisticRegressionModel
-from src.utils.preprocessing import Preprocessor
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import cross_val_predict, KFold
-import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import KFold, cross_val_predict
+
+from src.ml_modeling.models import LogisticRegressionModel
 from src.utils.plotting import Colors, set_style
-import numpy as np
+from src.utils.preprocessing import Preprocessor
 
 set_style()
 

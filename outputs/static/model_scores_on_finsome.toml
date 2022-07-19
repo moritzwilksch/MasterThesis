@@ -1,26 +1,35 @@
 [FinBERT]
 finsome_score = [0.7101408414324485]
+semeval_score = [0.6584854531703738]
 
 [TwitterRoBERTa]
 finsome_score = [0.7046650522228829]
+semeval_score = [0.7416385081406098]
 
 [LogReg]
 finsome_score = [0.7263623172330559]
+semeval_score = [0.7240210998494176]
 
 [VADER]
 finsome_score = [0.5909699429293709]
+semeval_score = [0.5644589468669655]
 
 [NTUSD-Fin]
 finsome_score = [0.5990336854997421]
+semeval_score = [0.6260192477540133]
 
 [SVM]
 finsome_score = [0.7265936175362881]
+semeval_score = [0.7369262654558401]
 
 [TransformerNN]
 finsome_score = [0.7065014316463024]
+semeval_score = [0.6896811362668647]
 
 [RecurrentNN]
 finsome_score = [0.7092727667441329]
+semeval_score = [0.6613662101694029]
 
 [BERTFinetune]
 finsome_score = [0.7017839164470342]
+semeval_score = [0.6253948736594389]

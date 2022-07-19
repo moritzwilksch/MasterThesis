@@ -14,7 +14,7 @@ outputs/tokenizers/*
 data/distilbert/*
 mlruns/*
 data/gme_casestudy/*
-
+data/semeval/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

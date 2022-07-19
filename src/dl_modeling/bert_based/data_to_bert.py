@@ -29,10 +29,14 @@ df = pd.read_parquet("data/labeled/labeled_tweets.parquet")
 # prepper = Preprocessor()
 # finsome = prepper.process(pl.from_pandas(finsome)).to_pandas()
 # df = prepper.process(pl.from_pandas(df)).to_pandas()
+
+semeval = pd.read_parquet("data/semeval/semeval_clean.parquet")
+prepper = Preprocessor()
+semeval = prepper.process(pl.from_pandas(semeval)).to_pandas().dropna(subset=["text"])
 #%%
 
 ### ATTENTION vvvv
-# df = finsome
+df = semeval
 
 for idx, batch in enumerate(np.array_split(df, 20)):
     print(f"Processing batch #{idx}...")
@@ -49,4 +53,4 @@ for idx, batch in enumerate(np.array_split(df, 20)):
     representations = torch.mean(out, dim=1)
     tac = time.perf_counter()
     print(f"Time taken: {tac - tic} for {len(texts)} texts")
-    # torch.save(representations, f"data/distilbert/noprep_pyfin_{idx}.pt")
+    torch.save(representations, f"data/distilbert/prep_semeval_{idx}.pt")

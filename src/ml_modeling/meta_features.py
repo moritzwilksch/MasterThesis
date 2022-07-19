@@ -66,11 +66,11 @@ meta_features
 df = prepper.process(df)
 #%%
 X = pl.concat([df.select("text"), meta_features], how="horizontal")
+from catboost import CatBoostClassifier, CatboostError
 from lightgbm import LGBMClassifier
-
 #%%
 from sklearn.base import BaseEstimator, ClassifierMixin
-from catboost import CatBoostClassifier, CatboostError
+
 
 class LGBMWrapper(BaseEstimator, ClassifierMixin):
     def __init__(self, num_leaves: int = 32):
@@ -151,7 +151,7 @@ model = model.fit(X.to_pandas(), df["label"].to_pandas())
 from src.utils.plotting import set_style
 
 set_style()
-from lightgbm.plotting import plot_tree, plot_importance
+from lightgbm.plotting import plot_importance, plot_tree
 
 plot_tree(model["model"].model, dpi=800)
 

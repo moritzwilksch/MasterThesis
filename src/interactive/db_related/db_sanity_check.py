@@ -6,7 +6,6 @@ import pandas as pd
 import polars as pl
 import pyarrow
 import seaborn as sns
-
 # from pymongoarrow.monkey import patch_all,
 from pymongoarrow.api import Schema, find_arrow_all
 

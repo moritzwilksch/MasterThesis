@@ -4,15 +4,10 @@ import toml
 from rich.console import Console
 from rich.panel import Panel
 
-from src.experimental.demo_tweets.models import (
-    FinancialBERT,
-    FinBERT,
-    ModelWrapper,
-    NTUSDFin,
-    PyFinLogReg,
-    TwitterRoberta,
-    Vader,
-)
+from src.experimental.demo_tweets.models import (FinancialBERT, FinBERT,
+                                                 ModelWrapper, NTUSDFin,
+                                                 PyFinLogReg, TwitterRoberta,
+                                                 Vader)
 from src.utils.storage import bucket
 
 c = Console(record=True)

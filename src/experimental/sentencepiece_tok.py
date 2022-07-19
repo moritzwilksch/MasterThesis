@@ -15,7 +15,6 @@ sp_model = torchtext.data.functional.load_sp_model("m_user.model")
 tokenizer = torchtext.data.functional.sentencepiece_tokenizer(sp_model=sp_model)
 
 import numpy as np
-
 #%%
 import torch
 

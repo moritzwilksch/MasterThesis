@@ -1,10 +1,11 @@
 #%%
 import numpy as np
+import optuna
 import pytorch_lightning as ptl
 import torch
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.metrics import roc_auc_score
-import optuna
+
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import BATCH_SIZE, CNNSAModel
 

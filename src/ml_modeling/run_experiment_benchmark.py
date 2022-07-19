@@ -10,14 +10,12 @@ import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, roc_auc_score
 
 from src.dl_modeling.data import TweetDataModule, TweetDataSet
-from src.dl_modeling.models import BERTSAModel, RecurrentSAModel, TransformerSAModel
-from src.ml_modeling.experiment import (
-    Experiment,
-    FinBERTBenchmark,
-    NTUSDMeBenchmark,
-    TwitterRoBERTaBenchmark,
-    VaderBenchmark,
-)
+from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
+                                    TransformerSAModel)
+from src.ml_modeling.experiment import (Experiment, FinBERTBenchmark,
+                                        NTUSDMeBenchmark,
+                                        TwitterRoBERTaBenchmark,
+                                        VaderBenchmark)
 from src.ml_modeling.models import LogisticRegressionModel, SVMModel
 from src.utils.db import get_client
 from src.utils.preprocessing import Preprocessor
@@ -51,6 +49,7 @@ pyfin_senti_data = pyfin_senti_data.with_column(
 pyfin_senti_data = pyfin_senti_data.to_pandas()
 
 
+#  Fin-SoMe
 finsome = pd.read_json("data/finSoMe/fin-SoMe.json")
 finsome = pd.DataFrame(
     {
@@ -64,11 +63,16 @@ finsome = pd.DataFrame(
 prepper = Preprocessor()
 finsome = prepper.process(pl.from_pandas(finsome)).to_pandas()
 
+# SemEval
+semeval = pd.read_parquet("data/semeval/semeval_clean.parquet")
+prepper = Preprocessor()
+semeval = prepper.process(pl.from_pandas(semeval)).to_pandas().dropna(subset=["text"])
 
 #%%
 class Dataset(Enum):
     FINSOME = "finsome"
     PYFIN_SENTI = "pyfin_sentiment_data"
+    SEMEVAL = "semeval"
 
 
 class Model(Enum):
@@ -85,12 +89,14 @@ class Model(Enum):
 
 
 ########################
-DATASET = Dataset.FINSOME
-MODEL = Model.VADER
+DATASET = Dataset.SEMEVAL
+MODEL = Model.BERTBASED
 ########################
 
 if DATASET == Dataset.FINSOME:
     data = finsome
+elif DATASET == Dataset.SEMEVAL:
+    data = semeval
 else:
     data = pyfin_senti_data
 
@@ -102,7 +108,7 @@ if MODEL == Model.LOGISTIC_REGRESSION:
         # experiment.fit_final_best_model(data)
         val_scores, test_scores, best_params, times_taken = experiment.load()
     else:
-        test_scores = experiment.apply_to_other_data(finsome)
+        test_scores = experiment.apply_to_other_data(data)
         times_taken = "N/A"
 
 if MODEL == Model.SVM:
@@ -111,12 +117,17 @@ if MODEL == Model.SVM:
         experiment.fit_final_best_model(data)
         val_scores, test_scores, best_params, times_taken = experiment.load()
     else:
-        test_scores = experiment.apply_to_other_data(finsome)
+        test_scores = experiment.apply_to_other_data(data)
         times_taken = "N/A"
 
 if MODEL == Model.VADER:
     vaderbenchmark = VaderBenchmark(data)
-    test_scores, times_taken = vaderbenchmark.load()
+
+    if DATASET == DATASET.PYFIN_SENTI:
+        test_scores, times_taken = vaderbenchmark.load()
+    else:
+        test_scores = vaderbenchmark.apply_to_other_data(data)
+        times_taken = "N/A"
 
 if MODEL == Model.FINBERT:
     finbertbenchmark = FinBERTBenchmark(data)
@@ -128,7 +139,12 @@ if MODEL == Model.TWITTER_ROBERTA:
 
 if MODEL == Model.NTUSD:
     ntusd = NTUSDMeBenchmark(data, path_to_ntusd_folder="data/NTUSD-Fin")
-    test_scores, times_taken = ntusd.load()
+
+    if DATASET == DATASET.PYFIN_SENTI:
+        test_scores, times_taken = ntusd.load()
+    else:
+        test_scores = ntusd.apply_to_other_data(data)
+        times_taken = "N/A"
 
 if MODEL == Model.RECURRENTNN:
     if DATASET == Dataset.PYFIN_SENTI:
@@ -178,9 +194,10 @@ if MODEL == Model.BERTBASED:
     model = BERTSAModel.load_from_checkpoint("outputs/models/bert_final.ckpt")
     model.eval()
 
+    _DATASET_NAME = "finsome" if DATASET == Dataset.FINSOME else "semeval"
     tensors = []
     for ii in range(20):
-        tensors.append(torch.load(f"data/distilbert/prep_finsome_{ii}.pt"))
+        tensors.append(torch.load(f"data/distilbert/prep_{_DATASET_NAME}_{ii}.pt"))
     X = torch.vstack(tensors).detach()
 
     preds = model(X).detach()

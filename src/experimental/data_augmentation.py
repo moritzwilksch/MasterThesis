@@ -9,11 +9,8 @@ import polars as pl
 import torchtext
 from bpemb import BPEmb
 from lightgbm import LGBMClassifier
-from sklearn.ensemble import (
-    ExtraTreesClassifier,
-    GradientBoostingClassifier,
-    RandomForestClassifier,
-)
+from sklearn.ensemble import (ExtraTreesClassifier, GradientBoostingClassifier,
+                              RandomForestClassifier)
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
@@ -69,12 +66,10 @@ def tokenize(s):
 X = tokenize(df["text"])
 y = df["label"].to_numpy()
 
+from nltk.corpus import stopwords
 #%%
 # X = tokenize(df["text"])
 from nltk.stem import PorterStemmer
-from nltk.corpus import stopwords
-
-
 # stemmer = PorterStemmer()
 # df = df.with_column(
 #     pl.col("text")

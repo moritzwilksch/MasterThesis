@@ -6,12 +6,13 @@ import polars as pl
 from nltk.corpus import stopwords
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import make_scorer, roc_auc_score
-from sklearn.model_selection import cross_val_score, train_test_split, cross_val_predict
+from sklearn.model_selection import (cross_val_predict, cross_val_score,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline
+
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import TransformerSAModel
 from src.utils.preprocessing import Preprocessor
-import numpy as np
 
 stopwords = list(stopwords.words("english"))
 

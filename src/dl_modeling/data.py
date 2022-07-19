@@ -4,9 +4,9 @@ import polars as pl
 import pytorch_lightning as ptl
 import torch
 import torch.nn as nn
-from torch.nn import functional as F
 import torchtext
 from sklearn.model_selection import KFold, train_test_split
+from torch.nn import functional as F
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 

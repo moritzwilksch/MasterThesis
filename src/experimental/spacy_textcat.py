@@ -61,18 +61,18 @@ for doc in nlp.pipe(df["text"].to_list(), batch_size=64, n_process=-1):
     preprocessed_docs.append(" ".join(w.lemma_ for w in doc))
 
 
+import numpy as np
+from lightgbm import LGBMClassifier
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import make_scorer, roc_auc_score
+from sklearn.model_selection import (cross_val_predict, cross_val_score,
+                                     train_test_split)
 #%%
 from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import cross_val_predict, cross_val_score, train_test_split
-from sklearn.metrics import roc_auc_score, make_scorer
-import numpy as np
-from sklearn.feature_selection import SelectKBest, chi2
-from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.feature_selection import SelectKBest
 from sklearn.preprocessing import FunctionTransformer
-from lightgbm import LGBMClassifier
 
 
 class LGBMWrapper(BaseEstimator, ClassifierMixin):

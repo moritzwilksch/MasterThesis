@@ -22,12 +22,13 @@ df = df.with_column(
 
 df = df.to_pandas()
 
+import numpy as np
+import torch
+import torch.nn.functional as F
+
 #%%
 from src.dl_modeling.data import TweetDataModule
 from src.dl_modeling.models import TransformerSAModel
-import torch
-import torch.nn.functional as F
-import numpy as np
 
 prepper = Preprocessor()
 

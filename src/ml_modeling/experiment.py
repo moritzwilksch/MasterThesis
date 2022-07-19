@@ -8,11 +8,8 @@ from rich.prompt import Prompt
 from scipy.special import softmax
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import KFold
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    TFAutoModelForSequenceClassification,
-)
+from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
+                          TFAutoModelForSequenceClassification)
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 from src.ml_modeling.models import BaseSklearnSAModel, LogisticRegressionModel
@@ -179,6 +176,31 @@ class VaderBenchmark(OffTheShelfModelBenchmark):
 
         return test_scores, times_taken
 
+    def apply_to_other_data(self, other_data: pd.DataFrame):
+        texts = other_data["text"].to_list()
+
+        preds = []
+        for tt in texts:
+            pred = self.analyzer.polarity_scores(tt)
+            probas = (pred["pos"], pred["neu"], pred["neg"])
+            if probas[0] == probas[1] == probas[2] == 0:
+                probas = (0, 1, 0)  # no signal = neutral
+            preds.append(probas)
+
+        # prevent some float issues where the sum of probas is 0.9999 or 1.0001
+        preds = np.array(preds)
+        preds = preds / preds.sum(axis=1, keepdims=True)
+
+        test_score = roc_auc_score(other_data["label"], preds, multi_class="ovr")
+
+        print(
+            classification_report(
+                other_data["label"].astype("int"), preds.argmax(axis=1) + 1
+            )
+        )
+
+        return test_score
+
 
 class FinBERTBenchmark(OffTheShelfModelBenchmark):
     def __init__(self, all_data: pd.DataFrame):
@@ -327,7 +349,6 @@ class NTUSDMeBenchmark(OffTheShelfModelBenchmark):
                 probas = (pred["pos"], pred["neu"], pred["neg"])
                 preds.append(probas)
 
-            # prevent some float issues where the sum of probas is 0.9999 or 1.0001
             tac = time.perf_counter()
             times_taken.append(tac - tic)
 
@@ -336,6 +357,25 @@ class NTUSDMeBenchmark(OffTheShelfModelBenchmark):
             )
 
         return test_scores, times_taken
+
+    def apply_to_other_data(self, other_data):
+        texts = other_data["text"].to_list()
+
+        preds = []
+        for tt in texts:
+            pred = self.predict_one(tt)
+            probas = (pred["pos"], pred["neu"], pred["neg"])
+            preds.append(probas)
+
+        test_score = roc_auc_score(other_data["label"], preds, multi_class="ovr")
+
+        print(
+            classification_report(
+                other_data["label"].astype("int"), np.array(preds).argmax(axis=1) + 1
+            )
+        )
+
+        return test_score
 
 
 # if __name__ == "__main__":

@@ -11,15 +11,14 @@ import seaborn as sns
 import torch
 import torch.nn.functional as F
 from matplotlib import projections
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             roc_auc_score)
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.dl_modeling.data import (
-    BERTTensorDataModule,
-    BertTensorDataSet,
-    TweetDataModule,
-)
-from src.dl_modeling.models import BERTSAModel, RecurrentSAModel, TransformerSAModel
+from src.dl_modeling.data import (BERTTensorDataModule, BertTensorDataSet,
+                                  TweetDataModule)
+from src.dl_modeling.models import (BERTSAModel, RecurrentSAModel,
+                                    TransformerSAModel)
 from src.utils.plotting import Colors, scale_lightness, set_style
 from src.utils.preprocessing import Preprocessor
 
@@ -63,10 +62,9 @@ def get_nearest(sims, word):
 
 # get_nearest(sims, "down")
 
-import umap
-
 # %%
 import gensim
+import umap
 
 word_vectors = gensim.models.KeyedVectors.load_word2vec_format(
     "~/Downloads/glove.6B.50d.txt", binary=False, no_header=True
