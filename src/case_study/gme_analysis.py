@@ -14,7 +14,7 @@ from src.utils.plotting import Colors, set_style
 set_style()
 
 #%%
-df = pd.read_parquet("data/gme_casestudy/gme_tweets.parquet").convert_dtypes()
+df = pd.read_parquet("data/gme_casestudy/gme_cleaned.parquet").convert_dtypes()
 model = SentimentModel()
 
 #%%
@@ -90,7 +90,7 @@ for ax_idx in (0, 1):
     axes[ax_idx].yaxis.set_major_formatter("{x:.0%}")
 
 
-to_highlight = [datetime.datetime(2021, 1, 14), datetime.datetime(2021, 2, 3)]
+to_highlight = [datetime.datetime(2021, 1, 14), datetime.datetime(2021, 2, 18, 12)]
 for ts in to_highlight:
     axes[0].axvline(x=ts, color="k", alpha=0.5, zorder=-1, ls="--", ymax=0.95)
     axes[1].axvline(x=ts, color="k", alpha=0.5, zorder=-1, ls="--", ymax=0.95)
@@ -117,7 +117,17 @@ axes[0].text(
 
 # titles
 axes[0].set_title("Positive and Negative Tweets (%)", weight="bold")
-axes[1].set_title("Positive Tweets (%) - Negative Tweets (%)", weight="bold")
+# axes[1].set_title("Positive Tweets (%) - Negative Tweets (%)", weight="bold")
+axes[1].set_title("Positivity", weight="bold")
+axes[1].annotate(
+    "Positive Tweets (%) - Negative Tweets (%)",
+    weight="bold",
+    xy=(0.5, 0.95),
+    xycoords="axes fraction",
+    ha="center",
+    va="center",
+    color="0.7",
+)
 
 
 plt.tight_layout()
