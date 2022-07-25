@@ -1,16 +1,17 @@
 #%%
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import ray
+import seaborn as sns
 from sklearn import multiclass
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+
 from src.utils.plotting import set_style
-import ray
 
 set_style()
 
@@ -73,7 +74,9 @@ def run_experiment(
         )
 
         test_preds = pipe.predict_proba(test_data["text"])
-        test_aucs.append(roc_auc_score(test_data["label"], test_preds, multi_class="ovr"))
+        test_aucs.append(
+            roc_auc_score(test_data["label"], test_preds, multi_class="ovr")
+        )
 
         train_data = train_data.assign(
             entropy=entropy(pipe.predict_proba(train_data["text"]))
