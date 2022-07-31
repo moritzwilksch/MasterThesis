@@ -131,3 +131,6 @@ ax.set_ylabel("Test AUC", weight="bold")
 ax.legend()
 sns.despine()
 fig.savefig("outputs/plots/active_learning.pdf", bbox_inches="tight")
+
+#%%
+ray.shutdown()
