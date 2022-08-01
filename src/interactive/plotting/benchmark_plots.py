@@ -62,7 +62,7 @@ def plot_scores(score_df, ax):
         color=Colors.YELLOW.value,
         ls="-",
         lw=3,
-        zorder=0,
+        zorder=5,
         label="existing models",
     )
 
@@ -72,11 +72,10 @@ def plot_scores(score_df, ax):
         color=Colors.DARKBLUE.value,
         ls="-",
         lw=3,
-        zorder=0,
+        zorder=5,
         label="proposed models",
     )
 
-    # ax.legend(framealpha=1)
     ax.text(
         x=1.5,
         y=score_df.max(axis=1).values.ravel()[0] + 0.02,
@@ -84,7 +83,9 @@ def plot_scores(score_df, ax):
         weight="bold",
         color=Colors.YELLOW.value,
         ha="center",
+        zorder=10,
     )
+
     ax.text(
         x=6,
         y=score_df.max(axis=1).values.ravel()[0] + 0.02,
@@ -96,6 +97,7 @@ def plot_scores(score_df, ax):
 
 
 fig, ax = plt.subplots(figsize=(15, 5))
+ax.grid(axis="y", ls="--", color="black", alpha=0.25, zorder=0)
 plot_scores(scores, ax)
 
 
@@ -104,10 +106,7 @@ ax.set_ylabel("Out-of-sample ROC AUC", labelpad=15, weight="bold")
 ax.tick_params(axis="x", length=0)
 ax.set_xlim(-0.25, 8.25)
 ax.set_xlabel("Model", weight="bold", labelpad=15)
-ax.grid(axis="y", ls="--", color="black", alpha=0.25)
-ax.set_xticklabels(
-    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
-)
+ax.set_xticklabels([DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()])
 
 sns.despine(bottom=True)
 plt.tight_layout()
@@ -160,7 +159,7 @@ def plot_times(times_df, ax):
         color=Colors.YELLOW.value,
         ls="-",
         lw=3,
-        zorder=0,
+        zorder=5,
     )
 
     ax.plot(
@@ -169,7 +168,7 @@ def plot_times(times_df, ax):
         color=Colors.DARKBLUE.value,
         ls="-",
         lw=3,
-        zorder=0,
+        zorder=5,
     )
 
     ax.legend(framealpha=1)
@@ -192,6 +191,7 @@ def plot_times(times_df, ax):
 
 
 fig, ax = plt.subplots(figsize=(15, 5))
+ax.grid(axis="y", ls="--", color="black", alpha=0.25, zorder=0)
 
 plot_times(times, ax)
 
@@ -199,12 +199,9 @@ ax.set_xlabel("Model", labelpad=15, weight="bold")
 ax.set_ylabel("Inference time per sample (ms)", labelpad=15, weight="bold")
 ax.set_yscale("log")
 ax.tick_params(axis="x", length=0)
-ax.set_xticklabels(
-    [DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()]
-)
+ax.set_xticklabels([DISPLAY_NAMES.get(name.get_text()) for name in ax.get_xticklabels()])
 ax.yaxis.set_major_formatter(lambda x, pos: f"{x:.1f}")
 
-ax.grid(axis="y", ls="--", color="black", alpha=0.25)
 ax.legend(frameon=False)
 sns.despine(bottom=True)
 plt.tight_layout()
@@ -215,6 +212,8 @@ fig.savefig(
 
 #%%
 fig, axes = plt.subplots(2, 1, figsize=(15, 10))
+axes[0].grid(axis="y", ls="--", color="black", alpha=0.25, zorder=0)
+axes[1].grid(axis="y", ls="--", color="black", alpha=0.25, zorder=0)
 plot_scores(finsome_scores, axes[0])
 plot_scores(semeval_scores, axes[1])
 
@@ -229,7 +228,6 @@ axes[0].set_xticklabels(
 axes[0].set_title("Fin-SoMe", weight="bold")
 axes[1].set_title("SemEval", weight="bold")
 
-axes[0].grid(axis="y", ls="--", color="black", alpha=0.25)
 axes[1].set_ylim(0.49, 0.77)
 axes[1].set_ylabel("ROC AUC on SemEval", labelpad=15, weight="bold")
 axes[1].tick_params(axis="x", length=0)
@@ -238,8 +236,6 @@ axes[1].set_xlabel("Model", weight="bold", labelpad=15)
 axes[1].set_xticklabels(
     [DISPLAY_NAMES.get(name.get_text()) for name in axes[1].get_xticklabels()]
 )
-
-axes[1].grid(axis="y", ls="--", color="black", alpha=0.25)
 
 
 sns.despine(bottom=True)
