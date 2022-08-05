@@ -26,6 +26,10 @@ We collect and label 10,000 tweets and train a varietiy of sentiment analysis mo
 Using the Fin-SoMe dataset compiled by Chen et al. (2020)
 <img width="1774" alt="image" src="https://user-images.githubusercontent.com/58488209/182565301-5ea19d97-c2fb-4a00-9629-49e9360acdec.png">
 
+## Resourcefulness
+Measured as inference time per sample (ms) on a system with an AMD Ryzen 5 3600 CPU and 64GB of RAM
+<img width="1774" alt="image" src="https://user-images.githubusercontent.com/58488209/183087415-705820a4-238a-40d4-b150-0af63ee7371d.png">
+
 # `pyFin-Sentiment`
 This work set out to publish a ***usable model artifact*** to provide future research with more accurate sentiment assessments. We therefore publish the proposed logistc regression model in an easy-to-use python library called [pyFin-Sentiment](https://github.com/moritzwilksch/pyfin-sentiment)
 
