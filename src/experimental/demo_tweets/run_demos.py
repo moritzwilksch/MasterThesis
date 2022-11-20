@@ -72,7 +72,9 @@ experiment = Experiment(
     # models=[Vader(), NTUSDFin(), PyFinLogReg()],
     examples_filename="data/examples/demo_pieces.toml",
 )
-experiment.run()
+experiment.run(
+    manual_input="The stock market is going to crash"
+)
 
 # with io.BytesIO() as f:
 #     f.write(c.export_text().encode("utf-8"))
