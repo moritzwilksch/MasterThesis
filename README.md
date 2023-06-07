@@ -1,6 +1,8 @@
 # 🎓 Master Thesis <img width=90 align="right" src="https://www.uni-potsdam.de/fileadmin/projects/zim/images/logos/Unilogo.svg">
-> My Master Thesis.
 
+> 📄 Published in the International Journal of Data Management and Data Insights as [*PyFin-sentiment: Towards a machine-learning-based model for deriving sentiment from financial tweets*](https://www.sciencedirect.com/science/article/pii/S2667096823000186)
+
+My Master Thesis.
 *The actual write up can be found in [this other repo](https://github.com/moritzwilksch/MasterThesisWriting)*
 
 # The Project
